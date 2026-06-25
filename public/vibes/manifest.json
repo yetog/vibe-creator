@@ -1,0 +1,20 @@
+{
+  "vibes": [
+    { "id": "chill-lofi-1",        "file": "fallback.gif", "mood": "chill",     "genre": "lofi",      "energyMin": 1, "energyMax": 10 },
+    { "id": "chill-ambient-1",     "file": "fallback.gif", "mood": "chill",     "genre": "ambient",   "energyMin": 1, "energyMax": 10 },
+    { "id": "chill-vaporwave-1",   "file": "fallback.gif", "mood": "chill",     "genre": "vaporwave", "energyMin": 1, "energyMax": 10 },
+    { "id": "chill-soul-1",        "file": "fallback.gif", "mood": "chill",     "genre": "soul",      "energyMin": 1, "energyMax": 10 },
+    { "id": "energetic-house-1",   "file": "fallback.gif", "mood": "energetic", "genre": "house",     "energyMin": 5, "energyMax": 10 },
+    { "id": "energetic-dnb-1",     "file": "fallback.gif", "mood": "energetic", "genre": "dnb",       "energyMin": 6, "energyMax": 10 },
+    { "id": "energetic-funk-1",    "file": "fallback.gif", "mood": "energetic", "genre": "funk",      "energyMin": 4, "energyMax": 10 },
+    { "id": "energetic-electronic-1","file": "fallback.gif","mood":"energetic",  "genre": "electronic","energyMin": 5, "energyMax": 10 },
+    { "id": "dark-electronic-1",   "file": "fallback.gif", "mood": "dark",      "genre": "electronic","energyMin": 1, "energyMax": 10 },
+    { "id": "dark-trapsoul-1",     "file": "fallback.gif", "mood": "dark",      "genre": "trapsoul",  "energyMin": 1, "energyMax": 10 },
+    { "id": "dark-dnb-1",          "file": "fallback.gif", "mood": "dark",      "genre": "dnb",       "energyMin": 5, "energyMax": 10 },
+    { "id": "dark-ambient-1",      "file": "fallback.gif", "mood": "dark",      "genre": "ambient",   "energyMin": 1, "energyMax": 10 },
+    { "id": "uplifting-soul-1",    "file": "fallback.gif", "mood": "uplifting", "genre": "soul",      "energyMin": 1, "energyMax": 10 },
+    { "id": "uplifting-westcoast-1","file": "fallback.gif","mood": "uplifting", "genre": "westcoast", "energyMin": 1, "energyMax": 10 },
+    { "id": "uplifting-lofi-1",    "file": "fallback.gif", "mood": "uplifting", "genre": "lofi",      "energyMin": 1, "energyMax":  6 },
+    { "id": "uplifting-funk-1",    "file": "fallback.gif", "mood": "uplifting", "genre": "funk",      "energyMin": 4, "energyMax": 10 }
+  ]
+}
