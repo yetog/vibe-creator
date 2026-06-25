@@ -6,7 +6,7 @@
 export type Mood = 'chill' | 'energetic' | 'dark' | 'uplifting';
 
 // Genre options
-export type Genre = 'lofi' | 'house' | 'ambient' | 'electronic' | 'soul' | 'funk';
+export type Genre = 'lofi' | 'house' | 'ambient' | 'electronic' | 'soul' | 'funk' | 'dnb' | 'vaporwave' | 'trapsoul' | 'westcoast';
 
 // Energy level (1-10)
 export type EnergyLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
@@ -144,5 +144,25 @@ export const GENRE_CONFIG: Record<Genre, {
     bpmRange: [100, 120],
     prompt: 'funky groove with slap bass and rhythmic guitar',
     instruments: ['bass', 'guitar', 'drums', 'horns'],
+  },
+  dnb: {
+    bpmRange: [160, 180],
+    prompt: 'drum and bass with heavy sub-bass, breakbeats and rolling percussion',
+    instruments: ['sub bass', 'breakbeats', 'pads', 'reese bass'],
+  },
+  vaporwave: {
+    bpmRange: [70, 90],
+    prompt: 'vaporwave with chopped retro samples, dreamy synths and nostalgic atmosphere',
+    instruments: ['sampler', 'electric piano', 'chorus synth', 'reverb'],
+  },
+  trapsoul: {
+    bpmRange: [65, 75],
+    prompt: 'trap soul with 808 bass, dark melodic synths and R&B influenced atmosphere',
+    instruments: ['808 bass', 'trap hi-hats', 'melodic synth', 'vocal chops'],
+  },
+  westcoast: {
+    bpmRange: [90, 100],
+    prompt: 'west coast rap beat with G-funk synths, laid-back groove and rolling bassline',
+    instruments: ['synth lead', 'funk bass', 'drum machine', 'whistle synth'],
   },
 };

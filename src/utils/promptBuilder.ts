@@ -63,12 +63,16 @@ export function getMoodEmoji(mood: string): string {
  */
 export function getGenreEmoji(genre: string): string {
   const emojis: Record<string, string> = {
-    lofi: '🎧',
-    house: '🏠',
-    ambient: '🌊',
-    electronic: '🤖',
-    soul: '💜',
-    funk: '🕺',
+    lofi:      '🎧',
+    house:     '🏠',
+    ambient:   '🌊',
+    electronic:'🤖',
+    soul:      '💜',
+    funk:      '🕺',
+    dnb:       '🥁',
+    vaporwave: '📼',
+    trapsoul:  '🌃',
+    westcoast: '🌴',
   };
   return emojis[genre] || '🎵';
 }
