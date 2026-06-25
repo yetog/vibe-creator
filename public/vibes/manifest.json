@@ -1,48 +1,290 @@
 {
   "vibes": [
-    { "id": "chill-lofi-low",         "file": "chill-lofi-low.gif",         "mood": "chill",     "genre": "lofi",       "energyMin": 1, "energyMax": 4  },
-    { "id": "chill-lofi-high",        "file": "chill-lofi-high.gif",        "mood": "chill",     "genre": "lofi",       "energyMin": 5, "energyMax": 10 },
-    { "id": "chill-ambient-1",        "file": "chill-ambient.gif",          "mood": "chill",     "genre": "ambient",    "energyMin": 1, "energyMax": 10 },
-    { "id": "chill-vaporwave-1",      "file": "chill-vaporwave.gif",        "mood": "chill",     "genre": "vaporwave",  "energyMin": 1, "energyMax": 10 },
-    { "id": "chill-soul-1",           "file": "chill-soul.gif",             "mood": "chill",     "genre": "soul",       "energyMin": 1, "energyMax": 10 },
-    { "id": "chill-trapsoul-1",       "file": "chill-trapsoul.gif",         "mood": "chill",     "genre": "trapsoul",   "energyMin": 1, "energyMax": 10 },
-    { "id": "chill-westcoast-1",      "file": "chill-westcoast.gif",        "mood": "chill",     "genre": "westcoast",  "energyMin": 1, "energyMax": 10 },
-    { "id": "chill-house-1",          "file": "chill-house.gif",            "mood": "chill",     "genre": "house",      "energyMin": 1, "energyMax": 5  },
-    { "id": "chill-electronic-1",     "file": "chill-electronic.gif",       "mood": "chill",     "genre": "electronic", "energyMin": 1, "energyMax": 5  },
-    { "id": "chill-funk-1",           "file": "chill-funk.gif",             "mood": "chill",     "genre": "funk",       "energyMin": 1, "energyMax": 6  },
-    { "id": "chill-dnb-1",            "file": "chill-dnb.gif",              "mood": "chill",     "genre": "dnb",        "energyMin": 1, "energyMax": 5  },
+    {
+      "id": "chill-lofi-low",
+      "file": "https://media.giphy.com/media/AaZbZNPZxrB8IoL5hX/giphy.gif",
+      "mood": "chill", "genre": "lofi", "energyMin": 1, "energyMax": 4,
+      "_desc": "Chill Listen GIF"
+    },
+    {
+      "id": "chill-lofi-high",
+      "file": "https://media.giphy.com/media/SrM826tgscTMzJpNFg/giphy.gif",
+      "mood": "chill", "genre": "lofi", "energyMin": 5, "energyMax": 10,
+      "_desc": "Happy Animation GIF"
+    },
+    {
+      "id": "chill-vaporwave-1",
+      "file": "https://media.giphy.com/media/K3FuGJK1NSXSuOzntN/giphy.gif",
+      "mood": "chill", "genre": "vaporwave", "energyMin": 1, "energyMax": 10,
+      "_desc": "Outrun City Lights GIF"
+    },
+    {
+      "id": "chill-ambient-1",
+      "file": "https://media.giphy.com/media/Ie9Ozt0BHQlwlykgLu/giphy.gif",
+      "mood": "chill", "genre": "ambient", "energyMin": 1, "energyMax": 10,
+      "_desc": "Loop Space GIF by xponentialdesign"
+    },
+    {
+      "id": "chill-soul-1",
+      "file": "https://media.giphy.com/media/jysIfTvb4lgUOty85d/giphy.gif",
+      "mood": "chill", "genre": "soul", "energyMin": 1, "energyMax": 10,
+      "_desc": "Record Player Analog GIF"
+    },
+    {
+      "id": "chill-trapsoul-1",
+      "file": "https://media.giphy.com/media/Fzt6LL05lletW/giphy.gif",
+      "mood": "chill", "genre": "trapsoul", "energyMin": 1, "energyMax": 10,
+      "_desc": "Raining Purple Rain GIF"
+    },
+    {
+      "id": "chill-westcoast-1",
+      "file": "https://media.giphy.com/media/l41lFW0f7oVa955Ly/giphy.gif",
+      "mood": "chill", "genre": "westcoast", "energyMin": 1, "energyMax": 10,
+      "_desc": "Palm Trees Sky GIF"
+    },
+    {
+      "id": "chill-house-1",
+      "file": "https://media.giphy.com/media/Y0nS56jYx31vw18Psu/giphy.gif",
+      "mood": "chill", "genre": "house", "energyMin": 1, "energyMax": 5,
+      "_desc": "Clubbing London GIF"
+    },
+    {
+      "id": "chill-electronic-1",
+      "file": "https://media.giphy.com/media/twIfIzPx5YCKATzcIR/giphy.gif",
+      "mood": "chill", "genre": "electronic", "energyMin": 1, "energyMax": 5,
+      "_desc": "Glow Sci Fi GIF"
+    },
+    {
+      "id": "chill-funk-1",
+      "file": "https://media.giphy.com/media/CCKnIHs1lNKGmvDNQu/giphy.gif",
+      "mood": "chill", "genre": "funk", "energyMin": 1, "energyMax": 6,
+      "_desc": "Vintage Spinning GIF"
+    },
+    {
+      "id": "chill-dnb-1",
+      "file": "https://media.giphy.com/media/AnpLC3io6QOtj4rkEX/giphy.gif",
+      "mood": "chill", "genre": "dnb", "energyMin": 1, "energyMax": 5,
+      "_desc": "Floating Digital Art GIF"
+    },
 
-    { "id": "energetic-house-1",      "file": "energetic-house.gif",        "mood": "energetic", "genre": "house",      "energyMin": 5, "energyMax": 10 },
-    { "id": "energetic-dnb-1",        "file": "energetic-dnb.gif",          "mood": "energetic", "genre": "dnb",        "energyMin": 6, "energyMax": 10 },
-    { "id": "energetic-funk-1",       "file": "energetic-funk.gif",         "mood": "energetic", "genre": "funk",       "energyMin": 4, "energyMax": 10 },
-    { "id": "energetic-electronic-1", "file": "energetic-electronic.gif",   "mood": "energetic", "genre": "electronic", "energyMin": 5, "energyMax": 10 },
-    { "id": "energetic-westcoast-1",  "file": "energetic-westcoast.gif",    "mood": "energetic", "genre": "westcoast",  "energyMin": 5, "energyMax": 10 },
-    { "id": "energetic-lofi-1",       "file": "energetic-lofi.gif",         "mood": "energetic", "genre": "lofi",       "energyMin": 5, "energyMax": 10 },
-    { "id": "energetic-vaporwave-1",  "file": "energetic-vaporwave.gif",    "mood": "energetic", "genre": "vaporwave",  "energyMin": 5, "energyMax": 10 },
-    { "id": "energetic-soul-1",       "file": "energetic-soul.gif",         "mood": "energetic", "genre": "soul",       "energyMin": 5, "energyMax": 10 },
-    { "id": "energetic-trapsoul-1",   "file": "energetic-trapsoul.gif",     "mood": "energetic", "genre": "trapsoul",   "energyMin": 5, "energyMax": 10 },
-    { "id": "energetic-ambient-1",    "file": "energetic-ambient.gif",      "mood": "energetic", "genre": "ambient",    "energyMin": 4, "energyMax": 10 },
+    {
+      "id": "energetic-house-1",
+      "file": "https://media.giphy.com/media/o8O6VVSsTELzTLIgkL/giphy.gif",
+      "mood": "energetic", "genre": "house", "energyMin": 5, "energyMax": 10,
+      "_desc": "Flashing Lights Dance GIF by RedefineTheObvious"
+    },
+    {
+      "id": "energetic-house-2",
+      "file": "https://media.giphy.com/media/RHHnB1pjM3Q9G7wJW2/giphy.gif",
+      "mood": "energetic", "genre": "house", "energyMin": 8, "energyMax": 10,
+      "_desc": "Martin Garrix EDM GIF"
+    },
+    {
+      "id": "energetic-dnb-1",
+      "file": "https://media.giphy.com/media/nEA4fqpS89JpOTfwi2/giphy.gif",
+      "mood": "energetic", "genre": "dnb", "energyMin": 6, "energyMax": 10,
+      "_desc": "Drum And Bass Rave GIF by METAFIZIQ"
+    },
+    {
+      "id": "energetic-dnb-2",
+      "file": "https://media.giphy.com/media/sjXSFBYWnzuPC5ST8F/giphy.gif",
+      "mood": "energetic", "genre": "dnb", "energyMin": 8, "energyMax": 10,
+      "_desc": "Big Fat Rave DJ GIF"
+    },
+    {
+      "id": "energetic-funk-1",
+      "file": "https://media.giphy.com/media/m1HpNsnfbhg5osLIOT/giphy.gif",
+      "mood": "energetic", "genre": "funk", "energyMin": 4, "energyMax": 10,
+      "_desc": "Back It Up Dancing GIF by ATO Records"
+    },
+    {
+      "id": "energetic-funk-2",
+      "file": "https://media.giphy.com/media/uuOfm0laPFwzTq3FOD/giphy.gif",
+      "mood": "energetic", "genre": "funk", "energyMin": 7, "energyMax": 10,
+      "_desc": "Dance Dancing GIF"
+    },
+    {
+      "id": "energetic-electronic-1",
+      "file": "https://media.giphy.com/media/A9Lbvgza45YFgY3DM0/giphy.gif",
+      "mood": "energetic", "genre": "electronic", "energyMin": 5, "energyMax": 10,
+      "_desc": "Neon Lights Cyberpunk GIF"
+    },
+    {
+      "id": "energetic-electronic-2",
+      "file": "https://media.giphy.com/media/mjTpgz6FGNVDoMg5lx/giphy.gif",
+      "mood": "energetic", "genre": "electronic", "energyMin": 8, "energyMax": 10,
+      "_desc": "Neon City 3D GIF"
+    },
+    {
+      "id": "energetic-westcoast-1",
+      "file": "https://media.giphy.com/media/gV8aKn7CicDkU0e2Nv/giphy.gif",
+      "mood": "energetic", "genre": "westcoast", "energyMin": 5, "energyMax": 10,
+      "_desc": "Joshua Tree California GIF"
+    },
+    {
+      "id": "energetic-vaporwave-1",
+      "file": "https://media.giphy.com/media/kbtysky2x8fZLW8osP/giphy.gif",
+      "mood": "energetic", "genre": "vaporwave", "energyMin": 5, "energyMax": 10,
+      "_desc": "Animation Art GIF by dualvoidanima"
+    },
+    {
+      "id": "energetic-soul-1",
+      "file": "https://media.giphy.com/media/8gzRfkLls7tIZhZakI/giphy.gif",
+      "mood": "energetic", "genre": "soul", "energyMin": 5, "energyMax": 10,
+      "_desc": "Record Player Spinning GIF by Vinyl Me Please"
+    },
+    {
+      "id": "energetic-trapsoul-1",
+      "file": "https://media.giphy.com/media/hWvk9iUU4uBBeyBq0k/giphy.gif",
+      "mood": "energetic", "genre": "trapsoul", "energyMin": 5, "energyMax": 10,
+      "_desc": "Raining Weather Report GIF"
+    },
+    {
+      "id": "energetic-ambient-1",
+      "file": "https://media.giphy.com/media/yONcTmGs6G5291WIhN/giphy.gif",
+      "mood": "energetic", "genre": "ambient", "energyMin": 4, "energyMax": 10,
+      "_desc": "Art Loop Space GIF"
+    },
+    {
+      "id": "energetic-lofi-1",
+      "file": "https://media.giphy.com/media/ssq8oGi0pPO5rMLrEV/giphy.gif",
+      "mood": "energetic", "genre": "lofi", "energyMin": 5, "energyMax": 10,
+      "_desc": "Happy Art GIF"
+    },
 
-    { "id": "dark-electronic-1",      "file": "dark-electronic.gif",        "mood": "dark",      "genre": "electronic", "energyMin": 1, "energyMax": 10 },
-    { "id": "dark-trapsoul-1",        "file": "dark-trapsoul.gif",          "mood": "dark",      "genre": "trapsoul",   "energyMin": 1, "energyMax": 10 },
-    { "id": "dark-dnb-1",             "file": "dark-dnb.gif",               "mood": "dark",      "genre": "dnb",        "energyMin": 5, "energyMax": 10 },
-    { "id": "dark-ambient-1",         "file": "dark-ambient.gif",           "mood": "dark",      "genre": "ambient",    "energyMin": 1, "energyMax": 10 },
-    { "id": "dark-lofi-1",            "file": "dark-lofi.gif",              "mood": "dark",      "genre": "lofi",       "energyMin": 1, "energyMax": 10 },
-    { "id": "dark-vaporwave-1",       "file": "dark-vaporwave.gif",         "mood": "dark",      "genre": "vaporwave",  "energyMin": 1, "energyMax": 10 },
-    { "id": "dark-soul-1",            "file": "dark-soul.gif",              "mood": "dark",      "genre": "soul",       "energyMin": 1, "energyMax": 10 },
-    { "id": "dark-westcoast-1",       "file": "dark-westcoast.gif",         "mood": "dark",      "genre": "westcoast",  "energyMin": 1, "energyMax": 10 },
-    { "id": "dark-house-1",           "file": "dark-house.gif",             "mood": "dark",      "genre": "house",      "energyMin": 4, "energyMax": 10 },
-    { "id": "dark-funk-1",            "file": "dark-funk.gif",              "mood": "dark",      "genre": "funk",       "energyMin": 1, "energyMax": 10 },
+    {
+      "id": "dark-electronic-1",
+      "file": "https://media.giphy.com/media/QTxF50wnvVaXDU3IJQ/giphy.gif",
+      "mood": "dark", "genre": "electronic", "energyMin": 1, "energyMax": 10,
+      "_desc": "Loop Glitch GIF by dualvoidanima"
+    },
+    {
+      "id": "dark-trapsoul-1",
+      "file": "https://media.giphy.com/media/NMlmbDwu9eeg8/giphy.gif",
+      "mood": "dark", "genre": "trapsoul", "energyMin": 1, "energyMax": 10,
+      "_desc": "Raining China GIF"
+    },
+    {
+      "id": "dark-dnb-1",
+      "file": "https://media.giphy.com/media/DnPskrGOFA30kbbNYG/giphy.gif",
+      "mood": "dark", "genre": "dnb", "energyMin": 5, "energyMax": 10,
+      "_desc": "Drum And Bass Party GIF by METAFIZIQ"
+    },
+    {
+      "id": "dark-ambient-1",
+      "file": "https://media.giphy.com/media/tyzdJuF8TRTOpqWN6o/giphy.gif",
+      "mood": "dark", "genre": "ambient", "energyMin": 1, "energyMax": 10,
+      "_desc": "Sci-Fi Art Space Portal GIF"
+    },
+    {
+      "id": "dark-vaporwave-1",
+      "file": "https://media.giphy.com/media/sCIIl5TVOzdfmRfMI0/giphy.gif",
+      "mood": "dark", "genre": "vaporwave", "energyMin": 1, "energyMax": 10,
+      "_desc": "Art Love GIF by dualvoidanima"
+    },
+    {
+      "id": "dark-lofi-1",
+      "file": "https://media.giphy.com/media/3o7TKIqinTbvtBivK0/giphy.gif",
+      "mood": "dark", "genre": "lofi", "energyMin": 1, "energyMax": 10,
+      "_desc": "Sad Its Raining GIF"
+    },
+    {
+      "id": "dark-soul-1",
+      "file": "https://media.giphy.com/media/UJIlgZrXvflhsppOht/giphy.gif",
+      "mood": "dark", "genre": "soul", "energyMin": 1, "energyMax": 10,
+      "_desc": "Record Player Song GIF by VALLEY"
+    },
+    {
+      "id": "dark-westcoast-1",
+      "file": "https://media.giphy.com/media/R1ZkSbLYYcniaYXyKc/giphy.gif",
+      "mood": "dark", "genre": "westcoast", "energyMin": 1, "energyMax": 10,
+      "_desc": "Good Night Popcorn GIF"
+    },
+    {
+      "id": "dark-house-1",
+      "file": "https://media.giphy.com/media/zhrG6Nzi8MdIj8PB77/giphy.gif",
+      "mood": "dark", "genre": "house", "energyMin": 4, "energyMax": 10,
+      "_desc": "Night Out Dancing GIF by JellaCreative"
+    },
+    {
+      "id": "dark-funk-1",
+      "file": "https://media.giphy.com/media/mZ4e0GYLVtoorFXNuq/giphy.gif",
+      "mood": "dark", "genre": "funk", "energyMin": 1, "energyMax": 10,
+      "_desc": "Back It Up Dancing GIF by ATO Records (darker)"
+    },
 
-    { "id": "uplifting-soul-1",       "file": "uplifting-soul.gif",         "mood": "uplifting", "genre": "soul",       "energyMin": 1, "energyMax": 10 },
-    { "id": "uplifting-westcoast-1",  "file": "uplifting-westcoast.gif",    "mood": "uplifting", "genre": "westcoast",  "energyMin": 1, "energyMax": 10 },
-    { "id": "uplifting-lofi-1",       "file": "uplifting-lofi.gif",         "mood": "uplifting", "genre": "lofi",       "energyMin": 1, "energyMax": 6  },
-    { "id": "uplifting-funk-1",       "file": "uplifting-funk.gif",         "mood": "uplifting", "genre": "funk",       "energyMin": 4, "energyMax": 10 },
-    { "id": "uplifting-house-1",      "file": "uplifting-house.gif",        "mood": "uplifting", "genre": "house",      "energyMin": 4, "energyMax": 10 },
-    { "id": "uplifting-vaporwave-1",  "file": "uplifting-vaporwave.gif",    "mood": "uplifting", "genre": "vaporwave",  "energyMin": 1, "energyMax": 10 },
-    { "id": "uplifting-ambient-1",    "file": "uplifting-ambient.gif",      "mood": "uplifting", "genre": "ambient",    "energyMin": 1, "energyMax": 10 },
-    { "id": "uplifting-electronic-1", "file": "uplifting-electronic.gif",   "mood": "uplifting", "genre": "electronic", "energyMin": 4, "energyMax": 10 },
-    { "id": "uplifting-trapsoul-1",   "file": "uplifting-trapsoul.gif",     "mood": "uplifting", "genre": "trapsoul",   "energyMin": 3, "energyMax": 10 },
-    { "id": "uplifting-dnb-1",        "file": "uplifting-dnb.gif",          "mood": "uplifting", "genre": "dnb",        "energyMin": 6, "energyMax": 10 }
+    {
+      "id": "uplifting-soul-1",
+      "file": "https://media.giphy.com/media/8cQrXPaQgkDXzJYP26/giphy.gif",
+      "mood": "uplifting", "genre": "soul", "energyMin": 1, "energyMax": 10,
+      "_desc": "Let It Die Spin GIF by Vinyl Me Please"
+    },
+    {
+      "id": "uplifting-westcoast-1",
+      "file": "https://media.giphy.com/media/fdG3UKjpYJxaRNjAjJ/giphy.gif",
+      "mood": "uplifting", "genre": "westcoast", "energyMin": 1, "energyMax": 10,
+      "_desc": "Happy Summer Time GIF by sofiahydman"
+    },
+    {
+      "id": "uplifting-westcoast-2",
+      "file": "https://media.giphy.com/media/1hujy3a24Q3eM/giphy.gif",
+      "mood": "uplifting", "genre": "westcoast", "energyMin": 5, "energyMax": 10,
+      "_desc": "Palm Trees Vintage GIF"
+    },
+    {
+      "id": "uplifting-funk-1",
+      "file": "https://media.giphy.com/media/NHhaJ7kokrzQ4yiqv3/giphy.gif",
+      "mood": "uplifting", "genre": "funk", "energyMin": 4, "energyMax": 10,
+      "_desc": "Back It Up Dancing GIF by ATO Records"
+    },
+    {
+      "id": "uplifting-lofi-1",
+      "file": "https://media.giphy.com/media/43dlOJurRmxfiOkoch/giphy.gif",
+      "mood": "uplifting", "genre": "lofi", "energyMin": 1, "energyMax": 6,
+      "_desc": "Fiesta Flores GIF"
+    },
+    {
+      "id": "uplifting-vaporwave-1",
+      "file": "https://media.giphy.com/media/yAjIXTFgZtfn6ix3Wt/giphy.gif",
+      "mood": "uplifting", "genre": "vaporwave", "energyMin": 1, "energyMax": 10,
+      "_desc": "Car Love GIF by dualvoidanima"
+    },
+    {
+      "id": "uplifting-ambient-1",
+      "file": "https://media.giphy.com/media/3dGErSGhPZIOZh5CCD/giphy.gif",
+      "mood": "uplifting", "genre": "ambient", "energyMin": 1, "energyMax": 10,
+      "_desc": "Relaxing Sci-Fi Space GIF"
+    },
+    {
+      "id": "uplifting-house-1",
+      "file": "https://media.giphy.com/media/SvF4AG7opQBAqGPt6Y/giphy.gif",
+      "mood": "uplifting", "genre": "house", "energyMin": 4, "energyMax": 10,
+      "_desc": "Clubbing London GIF by Good Company Records"
+    },
+    {
+      "id": "uplifting-electronic-1",
+      "file": "https://media.giphy.com/media/MFrZv1myf3dAGgKu1P/giphy.gif",
+      "mood": "uplifting", "genre": "electronic", "energyMin": 4, "energyMax": 10,
+      "_desc": "Neon N64 GIF by SuperTrip64"
+    },
+    {
+      "id": "uplifting-trapsoul-1",
+      "file": "https://media.giphy.com/media/gY8Bs8qvD1EukQBj5V/giphy.gif",
+      "mood": "uplifting", "genre": "trapsoul", "energyMin": 3, "energyMax": 10,
+      "_desc": "Cherry Blossom Pink GIF"
+    },
+    {
+      "id": "uplifting-dnb-1",
+      "file": "https://media.giphy.com/media/wUi9VpmCqSflDQifaA/giphy.gif",
+      "mood": "uplifting", "genre": "dnb", "energyMin": 6, "energyMax": 10,
+      "_desc": "Drum And Bass EDM GIF"
+    },
+
+    {
+      "id": "fallback",
+      "file": "fallback.gif",
+      "mood": "chill", "genre": "lofi", "energyMin": 1, "energyMax": 10,
+      "_desc": "1x1 black pixel safety net"
+    }
   ]
 }
