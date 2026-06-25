@@ -2,9 +2,9 @@ import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 
 import { AudioAnalysis, MOOD_CONFIG, Mood } from '../types';
 
 interface VibeCanvasProps {
-  mood: Mood;
-  energy: number;
-  analysis: AudioAnalysis | null;
+  mood:      Mood;
+  energy:    number;
+  analysis:  AudioAnalysis | null;
   isPlaying: boolean;
 }
 
@@ -13,226 +13,188 @@ export interface VibeCanvasHandle {
 }
 
 interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  alpha: number;
-  color: string;
+  x: number; y: number;
+  vx: number; vy: number;
+  size: number; alpha: number; color: string;
 }
 
 export const VibeCanvas = forwardRef<VibeCanvasHandle, VibeCanvasProps>(
   function VibeCanvas({ mood, energy, analysis, isPlaying }, ref) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number | null>(null);
-  const timeRef = useRef(0);
+  const timeRef      = useRef(0);
 
-  // Expose canvas to parent
-  useImperativeHandle(ref, () => ({
-    getCanvas: () => canvasRef.current,
-  }), []);
+  // Refs for reactive values — keeps draw() stable (empty deps)
+  const analysisRef = useRef<AudioAnalysis | null>(analysis);
+  const energyRef   = useRef<number>(energy);
+  const moodRef     = useRef<Mood>(mood);
 
-  const config = MOOD_CONFIG[mood];
-  const colors = config.colors;
+  useImperativeHandle(ref, () => ({ getCanvas: () => canvasRef.current }), []);
 
-  // Initialize particles
+  // Keep refs in sync on every render
+  useEffect(() => { analysisRef.current = analysis; }, [analysis]);
+  useEffect(() => { energyRef.current   = energy;   }, [energy]);
+  useEffect(() => { moodRef.current     = mood;     }, [mood]);
+
   const initParticles = useCallback((count: number) => {
-    const particles: Particle[] = [];
-    const colorOptions = [colors.primary, colors.secondary, colors.accent];
+    const cfg    = MOOD_CONFIG[moodRef.current];
+    const colors = cfg.colors;
+    const opts   = [colors.primary, colors.secondary, colors.accent];
+    particlesRef.current = Array.from({ length: count }, () => ({
+      x:     Math.random() * 400,
+      y:     Math.random() * 400,
+      vx:    (Math.random() - 0.5) * 2,
+      vy:    (Math.random() - 0.5) * 2,
+      size:  Math.random() * 4 + 2,
+      alpha: Math.random() * 0.5 + 0.3,
+      color: opts[Math.floor(Math.random() * opts.length)],
+    }));
+  }, []);
 
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * 400,
-        y: Math.random() * 400,
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-        size: Math.random() * 4 + 2,
-        alpha: Math.random() * 0.5 + 0.3,
-        color: colorOptions[Math.floor(Math.random() * colorOptions.length)],
-      });
-    }
-
-    particlesRef.current = particles;
-  }, [colors]);
-
-  // Draw frame
+  // Stable draw — reads live values from refs, no deps needed
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
+    const currentMood = moodRef.current;
+    const cfg         = MOOD_CONFIG[currentMood];
+    const colors      = cfg.colors;
+    const analysis    = analysisRef.current;
+    const energy      = energyRef.current;
 
-    // Time progression
+    const width = canvas.width, height = canvas.height;
+    const cx    = width / 2,    cy     = height / 2;
+
     timeRef.current += 0.016;
-    const time = timeRef.current;
+    const t = timeRef.current;
 
-    // Audio reactivity values
     const bass = analysis?.bass ?? 0.5;
-    const mid = analysis?.mid ?? 0.5;
+    const mid  = analysis?.mid  ?? 0.5;
     const high = analysis?.high ?? 0.5;
-    const rms = analysis?.rms ?? 0.3;
+    const rms  = analysis?.rms  ?? 0.3;
 
-    // Clear with fade effect
+    // Fade clear
     ctx.fillStyle = `${colors.background}cc`;
     ctx.fillRect(0, 0, width, height);
 
     // Background pulse
-    const pulseSize = 100 + bass * 150;
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, pulseSize);
-    gradient.addColorStop(0, `${colors.primary}40`);
-    gradient.addColorStop(0.5, `${colors.secondary}20`);
-    gradient.addColorStop(1, 'transparent');
-    ctx.fillStyle = gradient;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 100 + bass * 150);
+    grad.addColorStop(0, `${colors.primary}40`);
+    grad.addColorStop(0.5, `${colors.secondary}20`);
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
     // Rotating rings
-    const ringCount = 3;
-    for (let r = 0; r < ringCount; r++) {
-      const ringRadius = 60 + r * 40 + mid * 30;
-      const rotation = time * (0.5 + r * 0.2) * config.motionSpeed;
+    for (let r = 0; r < 3; r++) {
+      const radius   = 60 + r * 40 + mid * 30;
+      const rotation = t * (0.5 + r * 0.2) * cfg.motionSpeed;
       const segments = 12 + r * 4;
-
       ctx.strokeStyle = `${colors.accent}${Math.floor(50 + high * 50).toString(16).padStart(2, '0')}`;
-      ctx.lineWidth = 2 + bass * 2;
-
+      ctx.lineWidth   = 2 + bass * 2;
       ctx.beginPath();
       for (let i = 0; i < segments; i++) {
-        const angle = (i / segments) * Math.PI * 2 + rotation;
-        const wobble = Math.sin(time * 3 + i) * 5 * mid;
-        const x = centerX + Math.cos(angle) * (ringRadius + wobble);
-        const y = centerY + Math.sin(angle) * (ringRadius + wobble);
-
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
+        const angle  = (i / segments) * Math.PI * 2 + rotation;
+        const wobble = Math.sin(t * 3 + i) * 5 * mid;
+        const x = cx + Math.cos(angle) * (radius + wobble);
+        const y = cy + Math.sin(angle) * (radius + wobble);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
       ctx.closePath();
       ctx.stroke();
     }
 
     // Center orb
-    const orbSize = 30 + bass * 40 + rms * 20;
-    const orbGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, orbSize);
-    orbGradient.addColorStop(0, colors.primary);
-    orbGradient.addColorStop(0.5, colors.secondary);
-    orbGradient.addColorStop(1, 'transparent');
-
+    const orbR  = 30 + bass * 40 + rms * 20;
+    const orbG  = ctx.createRadialGradient(cx, cy, 0, cx, cy, orbR);
+    orbG.addColorStop(0, colors.primary);
+    orbG.addColorStop(0.5, colors.secondary);
+    orbG.addColorStop(1, 'transparent');
     ctx.beginPath();
-    ctx.arc(centerX, centerY, orbSize, 0, Math.PI * 2);
-    ctx.fillStyle = orbGradient;
+    ctx.arc(cx, cy, orbR, 0, Math.PI * 2);
+    ctx.fillStyle = orbG;
     ctx.fill();
 
     // Particles
-    const speedMultiplier = config.motionSpeed * (0.5 + energy / 10);
-
-    particlesRef.current.forEach((particle) => {
-      // Update position
-      particle.x += particle.vx * speedMultiplier * (1 + bass);
-      particle.y += particle.vy * speedMultiplier * (1 + bass);
-
-      // Wrap around
-      if (particle.x < 0) particle.x = width;
-      if (particle.x > width) particle.x = 0;
-      if (particle.y < 0) particle.y = height;
-      if (particle.y > height) particle.y = 0;
-
-      // Draw particle
-      const particleSize = particle.size * (1 + high * 2);
+    const speed = cfg.motionSpeed * (0.5 + energy / 10);
+    particlesRef.current.forEach((p) => {
+      p.x += p.vx * speed * (1 + bass);
+      p.y += p.vy * speed * (1 + bass);
+      if (p.x < 0)      p.x = width;
+      if (p.x > width)  p.x = 0;
+      if (p.y < 0)      p.y = height;
+      if (p.y > height) p.y = 0;
       ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particleSize, 0, Math.PI * 2);
-      ctx.fillStyle = particle.color + Math.floor(particle.alpha * 255 * (0.5 + rms)).toString(16).padStart(2, '0');
+      ctx.arc(p.x, p.y, p.size * (1 + high * 2), 0, Math.PI * 2);
+      ctx.fillStyle = p.color + Math.floor(p.alpha * 255 * (0.5 + rms)).toString(16).padStart(2, '0');
       ctx.fill();
     });
 
-    // Frequency bars (subtle)
+    // Frequency bars
     if (analysis?.frequencyData) {
-      const barCount = 32;
-      const barWidth = width / barCount;
-
-      for (let i = 0; i < barCount; i++) {
-        const value = analysis.frequencyData[i * 4] / 255;
-        const barHeight = value * 50;
-
+      const barW = width / 32;
+      for (let i = 0; i < 32; i++) {
+        const h = (analysis.frequencyData[i * 4] / 255) * 50;
         ctx.fillStyle = `${colors.accent}30`;
-        ctx.fillRect(
-          i * barWidth,
-          height - barHeight,
-          barWidth - 2,
-          barHeight
-        );
+        ctx.fillRect(i * barW, height - h, barW - 2, h);
       }
     }
 
-    // Continue animation
+    animationRef.current = requestAnimationFrame(draw);
+  }, []); // stable — refs provide live values
+
+  // Init particles on mount only
+  useEffect(() => {
+    initParticles(MOOD_CONFIG[mood].particleCount);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Start / stop loop on isPlaying change
+  useEffect(() => {
     if (isPlaying) {
       animationRef.current = requestAnimationFrame(draw);
-    }
-  }, [analysis, colors, config.motionSpeed, energy, isPlaying]);
-
-  // Initialize and start animation
-  useEffect(() => {
-    initParticles(config.particleCount);
-  }, [initParticles, config.particleCount]);
-
-  useEffect(() => {
-    if (isPlaying) {
-      draw();
     }
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
     };
   }, [isPlaying, draw]);
 
-  // Draw idle state
+  // Idle static frame
   useEffect(() => {
-    if (!isPlaying) {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Draw static preview
-      ctx.fillStyle = colors.background;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const gradient = ctx.createRadialGradient(200, 200, 0, 200, 200, 150);
-      gradient.addColorStop(0, `${colors.primary}40`);
-      gradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Center orb
-      ctx.beginPath();
-      ctx.arc(200, 200, 50, 0, Math.PI * 2);
-      const orbGradient = ctx.createRadialGradient(200, 200, 0, 200, 200, 50);
-      orbGradient.addColorStop(0, colors.primary);
-      orbGradient.addColorStop(1, colors.secondary);
-      ctx.fillStyle = orbGradient;
-      ctx.fill();
-    }
-  }, [isPlaying, colors]);
+    if (isPlaying) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const cfg    = MOOD_CONFIG[mood];
+    const colors = cfg.colors;
+    ctx.fillStyle = colors.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const g = ctx.createRadialGradient(200, 200, 0, 200, 200, 150);
+    g.addColorStop(0, `${colors.primary}40`);
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(200, 200, 50, 0, Math.PI * 2);
+    const og = ctx.createRadialGradient(200, 200, 0, 200, 200, 50);
+    og.addColorStop(0, colors.primary);
+    og.addColorStop(1, colors.secondary);
+    ctx.fillStyle = og;
+    ctx.fill();
+  }, [isPlaying, mood]);
 
   return (
-    <div className="canvas-container">
-      <canvas
-        ref={canvasRef}
-        width={400}
-        height={400}
-        className="w-full h-full"
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      width={400}
+      height={400}
+      className="w-full h-full"
+    />
   );
 });
