@@ -66,11 +66,12 @@ export async function getDemoAudio(mood: string): Promise<GenerateResult> {
   // For demo, we'll use a simple generated tone or fetch a sample
   // In production, you'd have pre-generated samples per mood
 
+  const base = import.meta.env.BASE_URL;
   const demoSamples: Record<string, string> = {
-    chill: '/samples/chill-demo.mp3',
-    energetic: '/samples/energetic-demo.mp3',
-    dark: '/samples/dark-demo.mp3',
-    uplifting: '/samples/uplifting-demo.mp3',
+    chill:     `${base}samples/chill-demo.mp3`,
+    energetic: `${base}samples/energetic-demo.mp3`,
+    dark:      `${base}samples/dark-demo.mp3`,
+    uplifting: `${base}samples/uplifting-demo.mp3`,
   };
 
   const sampleUrl = demoSamples[mood] || demoSamples.chill;
