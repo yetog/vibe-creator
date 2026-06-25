@@ -51,5 +51,7 @@ export async function getGif(
   }
 
   const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  // External URLs (Giphy, Tenor, etc.) are used as-is; local files get the base prefix.
+  if (pick.file.startsWith('http')) return pick.file;
   return `${base}vibes/${pick.file}`;
 }
