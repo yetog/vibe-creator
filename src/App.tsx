@@ -1,245 +1,235 @@
 import { useState, useCallback, useRef } from 'react';
-import { Play, Pause, Sparkles, Circle, Square } from 'lucide-react';
 import { VibeCanvas, VibeCanvasHandle } from './components/VibeCanvas';
-import { MoodSelector } from './components/MoodSelector';
-import { EnergySlider } from './components/EnergySlider';
-import { GenreSelector } from './components/GenreSelector';
-import { useAudioAnalyzer } from './hooks/useAudioAnalyzer';
-import { useVideoExport } from './hooks/useVideoExport';
+import { MoodSelector }     from './components/MoodSelector';
+import { EnergySlider }     from './components/EnergySlider';
+import { GenreSelector }    from './components/GenreSelector';
+import { GifPlayer }        from './components/GifPlayer';
+import { TvScreen }         from './components/TvScreen';
+import { PlaybackControls } from './components/PlaybackControls';
+import { useAudioEngine }   from './hooks/useAudioEngine';
+import { useVideoExport }   from './hooks/useVideoExport';
 import { generateAudio, getDemoAudio } from './services/elevenLabs';
+import { getGif }           from './services/gifLibrary';
 import { buildAudioPrompt, buildSimplePrompt } from './utils/promptBuilder';
-import { Mood, Genre, EnergyLevel, GenerationState, MOOD_CONFIG } from './types';
+import { Mood, Genre, EnergyLevel, GenerationState, GENRE_CONFIG } from './types';
 
 function App() {
-  // User selections
-  const [mood, setMood] = useState<Mood>('chill');
+  const [mood,   setMood]   = useState<Mood>('chill');
   const [energy, setEnergy] = useState<EnergyLevel>(5);
-  const [genre, setGenre] = useState<Genre>('lofi');
-
-  // Generation state
-  const [state, setState] = useState<GenerationState>('idle');
-  const [error, setError] = useState<string | null>(null);
-
-  // Canvas ref
-  const canvasRef = useRef<VibeCanvasHandle>(null);
-
-  // Audio
-  const { isPlaying, analysis, loadAudio, play, pause, getAudioContext, connectRecording } = useAudioAnalyzer();
-
-  // Video export
-  const { isRecording, recordingTime, startRecording, stopRecording } = useVideoExport();
-
-  // API Key (from environment or user input)
+  const [genre,  setGenre]  = useState<Genre>('lofi');
+  const [state,  setState]  = useState<GenerationState>('idle');
+  const [error,  setError]  = useState<string | null>(null);
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_ELEVENLABS_API_KEY || '');
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [showKey, setShowKey] = useState(false);
 
-  const config = MOOD_CONFIG[mood];
+  const canvasRef = useRef<VibeCanvasHandle>(null);
+  const engine    = useAudioEngine();
+  const { startRecording, stopRecording, isRecording } = useVideoExport();
 
-  // Generate vibe
+  const hasAudio = state !== 'idle';
+
+  const [minBpm, maxBpm] = GENRE_CONFIG[genre].bpmRange;
+  const derivedBpm = Math.round(minBpm + ((energy - 1) / 9) * (maxBpm - minBpm));
+
   const handleGenerate = useCallback(async () => {
     setError(null);
     setState('generating');
-
     try {
-      const settings = { mood, energy, genre };
-      let result;
-
-      if (apiKey) {
-        // Use 11Labs API
-        const prompt = buildAudioPrompt(settings);
-        console.log('Generating with prompt:', prompt);
-        result = await generateAudio(apiKey, { prompt, duration: 15 });
-      } else {
-        // Demo mode
-        console.log('Demo mode: Using sample audio');
-        result = await getDemoAudio(mood);
-      }
-
-      await loadAudio(result.audioUrl);
-      play();
+      const [audioResult, gifPath] = await Promise.all([
+        apiKey
+          ? generateAudio(apiKey, { prompt: buildAudioPrompt({ mood, energy, genre }), duration: 15 })
+          : getDemoAudio(mood),
+        getGif(mood, genre, energy),
+      ]);
+      setGifUrl(gifPath);
+      await engine.loadAudio(audioResult.audioUrl);
+      engine.play();
       setState('playing');
     } catch (err) {
-      console.error('Generation failed:', err);
       setError(err instanceof Error ? err.message : 'Generation failed');
       setState('idle');
     }
-  }, [mood, energy, genre, apiKey, loadAudio, play]);
+  }, [mood, energy, genre, apiKey, engine]);
 
-  // Toggle playback
   const handlePlayPause = useCallback(() => {
-    if (isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  }, [isPlaying, pause, play]);
+    if (engine.isPlaying) engine.pause();
+    else engine.play();
+  }, [engine]);
 
-  // Export video
   const handleExport = useCallback(() => {
-    if (isRecording) {
-      stopRecording();
-      return;
-    }
+    if (isRecording) { stopRecording(); return; }
+    const canvas       = canvasRef.current?.getCanvas();
+    const audioContext = engine.getAudioContext();
+    if (!canvas || !audioContext) { alert('Generate a vibe first before recording'); return; }
+    if (!engine.isPlaying)        { alert('Start playback before recording'); return; }
+    startRecording(canvas, audioContext, engine.connectRecording);
+  }, [isRecording, engine, startRecording, stopRecording]);
 
-    const canvas = canvasRef.current?.getCanvas();
-    const audioContext = getAudioContext();
-
-    if (!canvas || !audioContext) {
-      alert('Please generate a vibe first before recording');
-      return;
-    }
-
-    if (!isPlaying) {
-      alert('Please start playback before recording');
-      return;
-    }
-
-    startRecording(canvas, audioContext, connectRecording);
-  }, [isRecording, isPlaying, getAudioContext, connectRecording, startRecording, stopRecording]);
+  void handleExport;
 
   return (
     <div
-      className="min-h-screen p-6 transition-colors duration-500"
-      style={{ backgroundColor: config.colors.background }}
+      className="min-h-screen flex flex-col"
+      style={{ background: 'var(--bg)', color: 'var(--text)' }}
     >
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-            Vibe Creator
-          </h1>
-          <p className="text-gray-400">
-            Generate audio + matching visuals in one click
+      {/* Header */}
+      <header
+        className="px-6 pt-5 pb-4 flex items-end justify-between"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        <div>
+          <p className="eyebrow mb-1" style={{ color: 'var(--muted)' }}>
+            Powered by ElevenLabs
           </p>
-        </header>
+          <h1
+            className="font-cinzel text-3xl font-bold tracking-widest"
+            style={{
+              color:                'transparent',
+              background:           'linear-gradient(135deg, var(--gold), var(--cyan))',
+              WebkitBackgroundClip: 'text',
+              backgroundClip:       'text',
+            }}
+          >
+            VIBE CREATOR
+          </h1>
+        </div>
+        <p className="text-xs" style={{ color: 'var(--muted)' }}>
+          Audio + Visuals · One Click
+        </p>
+      </header>
 
-        {/* Main content */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Canvas */}
-          <div className="space-y-4">
-            <VibeCanvas
-              ref={canvasRef}
-              mood={mood}
-              energy={energy}
-              analysis={analysis}
-              isPlaying={isPlaying}
-            />
+      {/* Main grid */}
+      <main className="flex-1 grid lg:grid-cols-2 gap-5 p-5">
 
-            {/* Playback controls */}
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={handleGenerate}
-                disabled={state === 'generating'}
-                className={`
-                  flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all
-                  ${state === 'generating'
-                    ? 'bg-gray-600 cursor-wait'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
-                  }
-                `}
-              >
-                <Sparkles className="w-5 h-5" />
-                {state === 'generating' ? 'Generating...' : 'Generate Vibe'}
-              </button>
-
-              {state !== 'idle' && (
-                <>
-                  <button
-                    onClick={handlePlayPause}
-                    className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-5 h-5" />
-                    ) : (
-                      <Play className="w-5 h-5" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={handleExport}
-                    className={`p-3 rounded-full transition-colors ${
-                      isRecording
-                        ? 'bg-red-500/30 hover:bg-red-500/40 animate-pulse'
-                        : 'bg-white/10 hover:bg-white/20'
-                    }`}
-                    title={isRecording ? `Recording ${recordingTime}s - Click to stop` : 'Record video'}
-                  >
-                    {isRecording ? (
-                      <Square className="w-5 h-5 text-red-400" />
-                    ) : (
-                      <Circle className="w-5 h-5" />
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Error display */}
-            {error && (
-              <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm text-center">
-                {error}
-              </div>
-            )}
-
-            {/* Prompt preview */}
-            {state === 'idle' && (
-              <div className="p-3 bg-white/5 rounded-lg text-sm text-gray-400 text-center">
-                Preview: {buildSimplePrompt({ mood, energy, genre })}
-              </div>
-            )}
-          </div>
-
-          {/* Right: Controls */}
-          <div className="space-y-6 bg-black/20 rounded-2xl p-6 border border-white/10">
-            <MoodSelector value={mood} onChange={setMood} />
-            <EnergySlider value={energy} onChange={setEnergy} />
-            <GenreSelector value={genre} onChange={setGenre} />
-
-            {/* API Key section */}
-            <div className="pt-4 border-t border-white/10">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-300">
-                  11Labs API Key
-                </label>
-                <button
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="text-xs text-gray-500 hover:text-gray-300"
-                >
-                  {showApiKey ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              <input
-                type={showApiKey ? 'text' : 'password'}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Optional - uses demo audio without key"
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+        {/* Left: TV Screen */}
+        <div className="flex flex-col gap-4">
+          <TvScreen
+            mood={mood}
+            genre={genre}
+            energy={energy}
+            isPlaying={engine.isPlaying}
+          >
+            {/* Canvas ambient layer — behind GIF */}
+            <div className="absolute inset-0 z-0" style={{ opacity: 0.18 }}>
+              <VibeCanvas
+                ref={canvasRef}
+                mood={mood}
+                energy={energy}
+                analysis={engine.analysis}
+                isPlaying={engine.isPlaying}
               />
-              <p className="mt-2 text-xs text-gray-500">
-                Get your key at{' '}
-                <a
-                  href="https://elevenlabs.io"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-purple-400 hover:underline"
-                >
-                  elevenlabs.io
-                </a>
-              </p>
             </div>
-          </div>
+            {/* GIF hero layer */}
+            <div className="absolute inset-0 z-10">
+              <GifPlayer gifUrl={gifUrl} isPlaying={engine.isPlaying} />
+            </div>
+          </TvScreen>
+
+          {error && (
+            <div
+              className="p-3 rounded-lg text-sm text-center"
+              style={{
+                background: 'rgba(248,81,73,0.08)',
+                border:     '1px solid rgba(248,81,73,0.3)',
+                color:      '#f85149',
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {state === 'idle' && (
+            <div
+              className="p-3 rounded-lg text-xs text-center app-hud"
+              style={{ color: 'var(--muted)' }}
+            >
+              <span className="eyebrow mr-2">Preview:</span>
+              {buildSimplePrompt({ mood, energy, genre })}
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
-        <footer className="mt-12 text-center text-gray-500 text-sm">
-          <p>Built for Patch Night | Sound + Visuals + Code</p>
-          <p className="mt-1">
-            <a href="https://zaylegend.com" className="text-purple-400 hover:underline">
-              zaylegend.com
-            </a>
-          </p>
-        </footer>
-      </div>
+        {/* Right: Control panels */}
+        <div className="flex flex-col gap-4">
+
+          {/* SIGNAL panel */}
+          <div className="app-hud p-5 space-y-5">
+            <p className="eyebrow" style={{ color: 'var(--gold)' }}>⬡ Signal</p>
+            <MoodSelector  value={mood}   onChange={setMood}   />
+            <GenreSelector value={genre}  onChange={setGenre}  />
+            <EnergySlider  value={energy} onChange={setEnergy} />
+          </div>
+
+          {/* TRANSMIT panel */}
+          <div className="app-hud p-5">
+            <p className="eyebrow mb-3" style={{ color: 'var(--gold)' }}>⬡ Transmit</p>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm" style={{ color: 'var(--muted)' }}>
+                11Labs API Key
+              </label>
+              <button
+                onClick={() => setShowKey(!showKey)}
+                className="text-xs transition-colors"
+                style={{ color: 'var(--muted)', cursor: 'pointer' }}
+              >
+                {showKey ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Optional — demo mode without key"
+              className="input-hud w-full px-3 py-2 text-sm"
+            />
+            <p className="mt-2 text-xs" style={{ color: 'var(--muted)' }}>
+              Get your key at{' '}
+              <a
+                href="https://elevenlabs.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--gold)' }}
+                className="hover:underline"
+              >
+                elevenlabs.io
+              </a>
+            </p>
+          </div>
+        </div>
+      </main>
+
+      {/* Playback bar */}
+      <PlaybackControls
+        isPlaying={engine.isPlaying}
+        isLooping={engine.isLooping}
+        isGenerating={state === 'generating'}
+        hasAudio={hasAudio}
+        tempo={derivedBpm}
+        masterVolume={engine.masterVolume}
+        onGenerate={handleGenerate}
+        onPlayPause={handlePlayPause}
+        onToggleLoop={engine.toggleLoop}
+        onVolumeChange={engine.setMasterVolume}
+        onTempoChange={engine.setTempo}
+      />
+
+      {/* Footer */}
+      <footer
+        className="text-center py-3 text-xs"
+        style={{ color: 'var(--muted)', borderTop: '1px solid var(--border)' }}
+      >
+        Built for Patch Night ·{' '}
+        <a
+          href="https://zaylegend.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'var(--gold)' }}
+          className="hover:underline"
+        >
+          zaylegend.com
+        </a>
+      </footer>
     </div>
   );
 }
