@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { AudioAnalysis, MOOD_CONFIG, Mood } from '../types';
 
 interface VibeCanvasProps {
@@ -6,6 +6,10 @@ interface VibeCanvasProps {
   energy: number;
   analysis: AudioAnalysis | null;
   isPlaying: boolean;
+}
+
+export interface VibeCanvasHandle {
+  getCanvas: () => HTMLCanvasElement | null;
 }
 
 interface Particle {
@@ -18,11 +22,17 @@ interface Particle {
   color: string;
 }
 
-export function VibeCanvas({ mood, energy, analysis, isPlaying }: VibeCanvasProps) {
+export const VibeCanvas = forwardRef<VibeCanvasHandle, VibeCanvasProps>(
+  function VibeCanvas({ mood, energy, analysis, isPlaying }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number | null>(null);
   const timeRef = useRef(0);
+
+  // Expose canvas to parent
+  useImperativeHandle(ref, () => ({
+    getCanvas: () => canvasRef.current,
+  }), []);
 
   const config = MOOD_CONFIG[mood];
   const colors = config.colors;
@@ -225,4 +235,4 @@ export function VibeCanvas({ mood, energy, analysis, isPlaying }: VibeCanvasProp
       />
     </div>
   );
-}
+});

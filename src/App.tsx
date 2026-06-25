@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
-import { Play, Pause, Download, Sparkles } from 'lucide-react';
-import { VibeCanvas } from './components/VibeCanvas';
+import { useState, useCallback, useRef } from 'react';
+import { Play, Pause, Sparkles, Circle, Square } from 'lucide-react';
+import { VibeCanvas, VibeCanvasHandle } from './components/VibeCanvas';
 import { MoodSelector } from './components/MoodSelector';
 import { EnergySlider } from './components/EnergySlider';
 import { GenreSelector } from './components/GenreSelector';
 import { useAudioAnalyzer } from './hooks/useAudioAnalyzer';
+import { useVideoExport } from './hooks/useVideoExport';
 import { generateAudio, getDemoAudio } from './services/elevenLabs';
 import { buildAudioPrompt, buildSimplePrompt } from './utils/promptBuilder';
 import { Mood, Genre, EnergyLevel, GenerationState, MOOD_CONFIG } from './types';
@@ -19,8 +20,14 @@ function App() {
   const [state, setState] = useState<GenerationState>('idle');
   const [error, setError] = useState<string | null>(null);
 
+  // Canvas ref
+  const canvasRef = useRef<VibeCanvasHandle>(null);
+
   // Audio
-  const { isPlaying, analysis, loadAudio, play, pause } = useAudioAnalyzer();
+  const { isPlaying, analysis, loadAudio, play, pause, getAudioContext, connectRecording } = useAudioAnalyzer();
+
+  // Video export
+  const { isRecording, recordingTime, startRecording, stopRecording } = useVideoExport();
 
   // API Key (from environment or user input)
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_ELEVENLABS_API_KEY || '');
@@ -67,11 +74,28 @@ function App() {
     }
   }, [isPlaying, pause, play]);
 
-  // Export video (placeholder)
+  // Export video
   const handleExport = useCallback(() => {
-    // TODO: Implement MediaRecorder capture
-    alert('Export coming soon! This will capture the canvas + audio as a video.');
-  }, []);
+    if (isRecording) {
+      stopRecording();
+      return;
+    }
+
+    const canvas = canvasRef.current?.getCanvas();
+    const audioContext = getAudioContext();
+
+    if (!canvas || !audioContext) {
+      alert('Please generate a vibe first before recording');
+      return;
+    }
+
+    if (!isPlaying) {
+      alert('Please start playback before recording');
+      return;
+    }
+
+    startRecording(canvas, audioContext, connectRecording);
+  }, [isRecording, isPlaying, getAudioContext, connectRecording, startRecording, stopRecording]);
 
   return (
     <div
@@ -94,6 +118,7 @@ function App() {
           {/* Left: Canvas */}
           <div className="space-y-4">
             <VibeCanvas
+              ref={canvasRef}
               mood={mood}
               energy={energy}
               analysis={analysis}
@@ -132,9 +157,18 @@ function App() {
 
                   <button
                     onClick={handleExport}
-                    className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                    className={`p-3 rounded-full transition-colors ${
+                      isRecording
+                        ? 'bg-red-500/30 hover:bg-red-500/40 animate-pulse'
+                        : 'bg-white/10 hover:bg-white/20'
+                    }`}
+                    title={isRecording ? `Recording ${recordingTime}s - Click to stop` : 'Record video'}
                   >
-                    <Download className="w-5 h-5" />
+                    {isRecording ? (
+                      <Square className="w-5 h-5 text-red-400" />
+                    ) : (
+                      <Circle className="w-5 h-5" />
+                    )}
                   </button>
                 </>
               )}

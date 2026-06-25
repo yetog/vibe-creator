@@ -11,6 +11,8 @@ interface UseAudioAnalyzerReturn {
   pause: () => void;
   stop: () => void;
   getAnalysis: () => AudioAnalysis | null;
+  getAudioContext: () => AudioContext | null;
+  connectRecording: (destination: MediaStreamAudioDestinationNode) => void;
 }
 
 export function useAudioAnalyzer(): UseAudioAnalyzerReturn {
@@ -168,6 +170,18 @@ export function useAudioAnalyzer(): UseAudioAnalyzerReturn {
     return analyzeFrame();
   }, [analyzeFrame]);
 
+  // Get audio context (for recording)
+  const getAudioContext = useCallback(() => {
+    return audioContextRef.current;
+  }, []);
+
+  // Connect to recording destination
+  const connectRecording = useCallback((destination: MediaStreamAudioDestinationNode) => {
+    if (analyserRef.current) {
+      analyserRef.current.connect(destination);
+    }
+  }, []);
+
   // Cleanup
   useEffect(() => {
     return () => {
@@ -188,5 +202,7 @@ export function useAudioAnalyzer(): UseAudioAnalyzerReturn {
     pause,
     stop,
     getAnalysis,
+    getAudioContext,
+    connectRecording,
   };
 }
