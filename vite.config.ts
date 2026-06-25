@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/vibe-creator/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
