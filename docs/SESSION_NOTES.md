@@ -71,7 +71,8 @@ Build Track A as base, add ONE Track B feature later:
 | **Visual** | `VibeCanvas` | ✅ Canvas with particles/rings |
 | **Visual** | Mood → Colors | ✅ 4 color palettes |
 | **Visual** | Energy → Motion | ✅ Particle speed scaling |
-| **Export** | Video capture | 🔜 MediaRecorder |
+| **Export** | `useVideoExport` | ✅ MediaRecorder WebM |
+| **Security** | Backend API Proxy | ✅ Key hidden server-side |
 
 ---
 
@@ -82,8 +83,8 @@ User Input (Mood/Energy/Genre)
         ↓
     buildAudioPrompt()
         ↓
-    generateAudio() → 11Labs API
-        ↓
+    generateAudio() → Backend Proxy → 11Labs API
+        ↓                (API key hidden)
     loadAudio() → Web Audio API
         ↓
     useAudioAnalyzer() → FFT Analysis
@@ -94,6 +95,10 @@ User Input (Mood/Energy/Genre)
         ├── Mid → Rotation, movement
         ├── High → Particles, sparkle
         └── RMS → Overall intensity
+        ↓
+    useVideoExport() → MediaRecorder
+        ↓
+    Download WebM (canvas + audio)
 ```
 
 ---
@@ -124,24 +129,52 @@ User Input (Mood/Energy/Genre)
 
 ## Next Steps
 
+### Completed
+- [x] Push to GitHub: `yetog/vibe-creator`
+- [x] Deploy to zaylegend.com/vibe-creator
+- [x] Export as video (MediaRecorder WebM)
+- [x] Backend API proxy (API key secure)
+- [x] Dashboard integration for updates
+
 ### Before Patch Night
-- [ ] Push to GitHub: `yetog/vibe-creator`
-- [ ] Deploy to zaylegend.com/vibe-creator
 - [ ] Add sample audio files for demo mode
 - [ ] Test with real 11Labs API key
 - [ ] Create 5-slide presentation deck
+- [ ] Polish UI design
 
 ### At Patch Night
 - [ ] Demo the working prototype
-- [ ] Let trio add features (export, gesture)
+- [ ] Let trio add features (gesture control)
 - [ ] Capture 60-second showcase video
 
 ### Future Enhancements
-- [ ] Export as video (MediaRecorder)
 - [ ] Hand gesture control (MediaPipe)
 - [ ] More visual modes (waveform, spectrum)
 - [ ] Save/load vibes
 - [ ] Share to social media
+
+---
+
+## Security: API Key Protection
+
+The 11Labs API key is **never exposed to the frontend**. Instead:
+
+1. Frontend calls `/api/elevenlabs/generate-sound` on our server
+2. Backend proxy adds the API key server-side
+3. Backend forwards request to 11Labs
+4. Response is returned to frontend
+
+**Benefits:**
+- API key can't be stolen from browser DevTools
+- Key rotation doesn't require frontend rebuild
+- Rate limiting can be added server-side
+- Usage can be monitored/logged
+
+**Configuration:**
+```bash
+# Add key to server environment
+echo "ELEVENLABS_API_KEY=your_key" > /var/www/zaylegend/api/.env
+```
 
 ---
 

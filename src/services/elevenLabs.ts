@@ -1,10 +1,11 @@
 /**
  * 11Labs Audio Generation Service
  *
- * Uses the 11Labs Sound Effects API or Music API to generate audio
+ * Uses backend proxy to keep API key secure (never exposed to frontend)
  */
 
-const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1';
+// Backend proxy URL - API key is stored server-side
+const PROXY_URL = 'https://zaylegend.com/api/elevenlabs';
 
 interface GenerateOptions {
   prompt: string;
@@ -17,25 +18,19 @@ interface GenerateResult {
 }
 
 /**
- * Generate audio using 11Labs API
- *
- * Note: This requires an API key. For the MVP, we'll provide
- * a fallback demo mode with pre-generated audio samples.
+ * Generate audio using backend proxy (API key stays server-side)
  */
 export async function generateAudio(
-  apiKey: string,
+  _apiKey: string,  // Ignored - key is on server
   options: GenerateOptions
 ): Promise<GenerateResult> {
   const { prompt, duration = 15 } = options;
 
   try {
-    // 11Labs Sound Effects endpoint
-    const response = await fetch(`${ELEVENLABS_API_URL}/sound-generation`, {
+    const response = await fetch(`${PROXY_URL}/generate-sound`, {
       method: 'POST',
       headers: {
-        'Accept': 'audio/mpeg',
         'Content-Type': 'application/json',
-        'xi-api-key': apiKey,
       },
       body: JSON.stringify({
         text: prompt,
@@ -45,10 +40,17 @@ export async function generateAudio(
     });
 
     if (!response.ok) {
-      throw new Error(`11Labs API error: ${response.status}`);
+      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(error.detail || `API error: ${response.status}`);
     }
 
-    const audioBlob = await response.blob();
+    const data = await response.json();
+
+    // Convert hex-encoded audio back to blob
+    const bytes = new Uint8Array(
+      data.audio.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16))
+    );
+    const audioBlob = new Blob([bytes], { type: data.content_type || 'audio/mpeg' });
     const audioUrl = URL.createObjectURL(audioBlob);
 
     return { audioUrl, audioBlob };
@@ -60,12 +62,9 @@ export async function generateAudio(
 
 /**
  * Demo mode: Return a sample audio file
- * This is used when no API key is provided
+ * This is used when no API key is configured on server
  */
 export async function getDemoAudio(mood: string): Promise<GenerateResult> {
-  // For demo, we'll use a simple generated tone or fetch a sample
-  // In production, you'd have pre-generated samples per mood
-
   const base = import.meta.env.BASE_URL;
   const demoSamples: Record<string, string> = {
     chill:     `${base}samples/chill-demo.mp3`,
@@ -84,6 +83,19 @@ export async function getDemoAudio(mood: string): Promise<GenerateResult> {
   } catch {
     // Generate a simple tone as fallback
     return generateTone(440, 15);
+  }
+}
+
+/**
+ * Check if API key is configured on server
+ */
+export async function checkServerStatus(): Promise<boolean> {
+  try {
+    const response = await fetch(`${PROXY_URL}/status`);
+    const data = await response.json();
+    return data.configured === true;
+  } catch {
+    return false;
   }
 }
 
@@ -169,17 +181,8 @@ function writeString(view: DataView, offset: number, string: string) {
 }
 
 /**
- * Check if API key is valid
+ * Legacy: Validate API key (deprecated - key is now server-side)
  */
-export async function validateApiKey(apiKey: string): Promise<boolean> {
-  try {
-    const response = await fetch(`${ELEVENLABS_API_URL}/user`, {
-      headers: {
-        'xi-api-key': apiKey,
-      },
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
+export async function validateApiKey(_apiKey: string): Promise<boolean> {
+  return checkServerStatus();
 }
