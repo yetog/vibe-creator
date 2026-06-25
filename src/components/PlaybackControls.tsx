@@ -1,23 +1,26 @@
-import { Play, Pause, Repeat, Sparkles, Volume2 } from 'lucide-react';
+import { Play, Pause, Repeat, Sparkles, Volume2, Circle, Square, Download } from 'lucide-react';
 
 interface PlaybackControlsProps {
   isPlaying:      boolean;
   isLooping:      boolean;
   isGenerating:   boolean;
+  isRecording:    boolean;
   hasAudio:       boolean;
   tempo:          number;
   masterVolume:   number;
   onGenerate:     () => void;
   onPlayPause:    () => void;
   onToggleLoop:   () => void;
+  onRecord:       () => void;
+  onDownloadAudio: () => void;
   onVolumeChange: (vol: number) => void;
   onTempoChange:  (bpm: number) => void;
 }
 
 export function PlaybackControls({
-  isPlaying, isLooping, isGenerating, hasAudio,
+  isPlaying, isLooping, isGenerating, isRecording, hasAudio,
   tempo, masterVolume,
-  onGenerate, onPlayPause, onToggleLoop,
+  onGenerate, onPlayPause, onToggleLoop, onRecord, onDownloadAudio,
   onVolumeChange, onTempoChange,
 }: PlaybackControlsProps) {
   return (
@@ -71,6 +74,33 @@ export function PlaybackControls({
           }}
         >
           <Repeat size={15} />
+        </button>
+      )}
+
+      {/* Record Video */}
+      {hasAudio && (
+        <button
+          onClick={onRecord}
+          className="p-2.5 rounded-lg transition-all"
+          title={isRecording ? 'Stop Recording' : 'Record Video'}
+          style={{
+            background: isRecording ? 'rgba(239,68,68,0.2)' : 'var(--surface-2)',
+            border:     `1px solid ${isRecording ? '#ef4444' : 'var(--border)'}`,
+            color:      isRecording ? '#ef4444' : 'var(--muted)',
+          }}
+        >
+          {isRecording ? <Square size={15} /> : <Circle size={15} />}
+        </button>
+      )}
+
+      {/* Download Audio */}
+      {hasAudio && (
+        <button
+          onClick={onDownloadAudio}
+          className="p-2.5 rounded-lg transition-all card-hud"
+          title="Download Audio"
+        >
+          <Download size={15} style={{ color: 'var(--cyan)' }} />
         </button>
       )}
 

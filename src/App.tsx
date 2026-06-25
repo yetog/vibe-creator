@@ -20,6 +20,7 @@ function App() {
   const [state,  setState]  = useState<GenerationState>('idle');
   const [error,  setError]  = useState<string | null>(null);
   const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_ELEVENLABS_API_KEY || '');
   const [showKey, setShowKey] = useState(false);
 
@@ -43,6 +44,7 @@ function App() {
         getGif(mood, genre, energy),
       ]);
       setGifUrl(gifPath);
+      setAudioUrl(audioResult.audioUrl);
       await engine.loadAudio(audioResult.audioUrl);
       engine.play();
       setState('playing');
@@ -66,7 +68,13 @@ function App() {
     startRecording(canvas, audioContext, engine.connectRecording);
   }, [isRecording, engine, startRecording, stopRecording]);
 
-  void handleExport;
+  const handleDownloadAudio = useCallback(() => {
+    if (!audioUrl) { alert('Generate a vibe first before downloading'); return; }
+    const link = document.createElement('a');
+    link.href = audioUrl;
+    link.download = `vibe-${mood}-${genre}-${Date.now()}.mp3`;
+    link.click();
+  }, [audioUrl, mood, genre]);
 
   return (
     <div
@@ -204,12 +212,15 @@ function App() {
         isPlaying={engine.isPlaying}
         isLooping={engine.isLooping}
         isGenerating={state === 'generating'}
+        isRecording={isRecording}
         hasAudio={hasAudio}
         tempo={derivedBpm}
         masterVolume={engine.masterVolume}
         onGenerate={handleGenerate}
         onPlayPause={handlePlayPause}
         onToggleLoop={engine.toggleLoop}
+        onRecord={handleExport}
+        onDownloadAudio={handleDownloadAudio}
         onVolumeChange={engine.setMasterVolume}
         onTempoChange={engine.setTempo}
       />
