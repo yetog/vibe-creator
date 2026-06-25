@@ -22,8 +22,8 @@ function App() {
   // Audio
   const { isPlaying, analysis, loadAudio, play, pause } = useAudioAnalyzer();
 
-  // API Key (in production, this would be handled securely)
-  const [apiKey, setApiKey] = useState('');
+  // API Key (from environment or user input)
+  const [apiKey, setApiKey] = useState(import.meta.env.VITE_ELEVENLABS_API_KEY || '');
   const [showApiKey, setShowApiKey] = useState(false);
 
   const config = MOOD_CONFIG[mood];
