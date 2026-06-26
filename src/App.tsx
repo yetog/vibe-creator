@@ -7,9 +7,11 @@ import { GifPlayer }           from './components/GifPlayer';
 import { TvScreen }            from './components/TvScreen';
 import { GeneratingOverlay }   from './components/GeneratingOverlay';
 import { AdvancedPanel }       from './components/AdvancedPanel';
+import { HistoryPanel }        from './components/HistoryPanel';
 import { PlaybackControls } from './components/PlaybackControls';
 import { useAudioEngine }   from './hooks/useAudioEngine';
 import { useVideoExport }   from './hooks/useVideoExport';
+import { useVibeHistory, type VibeHistoryEntry } from './hooks/useVibeHistory';
 import { generateAudio, getDemoAudio } from './services/elevenLabs';
 import { getGif }           from './services/gifLibrary';
 import { buildAdvancedPrompt, buildSimplePrompt } from './utils/promptBuilder';
@@ -30,6 +32,7 @@ function App() {
   const canvasRef = useRef<VibeCanvasHandle>(null);
   const engine    = useAudioEngine();
   const { startRecording, stopRecording, isRecording } = useVideoExport();
+  const { history, addEntry, clearHistory } = useVibeHistory();
 
   const hasAudio = state !== 'idle';
 
@@ -52,16 +55,24 @@ function App() {
       await engine.loadAudio(audioResult.audioUrl);
       engine.play();
       setState('playing');
+      addEntry({ mood, energy, genre, advanced, prompt: buildAdvancedPrompt({ mood, energy, genre }, advanced) });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed');
       setState('idle');
     }
-  }, [mood, energy, genre, advanced, apiKey, engine]);
+  }, [mood, energy, genre, advanced, apiKey, engine, addEntry]);
 
   const handlePlayPause = useCallback(() => {
     if (engine.isPlaying) engine.pause();
     else engine.play();
   }, [engine]);
+
+  const handleReplay = useCallback((entry: VibeHistoryEntry) => {
+    setMood(entry.mood);
+    setEnergy(entry.energy);
+    setGenre(entry.genre);
+    setAdvanced(entry.advanced);
+  }, []);
 
   const handleExport = useCallback(() => {
     if (isRecording) { stopRecording(); return; }
@@ -213,6 +224,13 @@ function App() {
               </a>
             </p>
           </div>
+
+          {/* HISTORY panel */}
+          <HistoryPanel
+            history={history}
+            onReplay={handleReplay}
+            onClear={clearHistory}
+          />
         </div>
       </main>
 
