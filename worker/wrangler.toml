@@ -1,0 +1,9 @@
+name = "vibe-creator-api"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# Deploy: wrangler deploy
+# Set API key: wrangler secret put ELEVENLABS_API_KEY
+#
+# After deploy, set VITE_API_PROXY_URL in the React app's .env:
+# VITE_API_PROXY_URL=https://vibe-creator-api.YOUR_SUBDOMAIN.workers.dev
