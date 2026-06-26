@@ -7,6 +7,7 @@ interface GifEntry {
   genre:     string;
   energyMin: number;
   energyMax: number;
+  _desc?:    string;
 }
 
 interface GifManifest {
@@ -63,17 +64,27 @@ function resolveUrl(entry: GifEntry, base: string): string {
   return `${base}vibes/${entry.file}`;
 }
 
+function entryMatchesKeywords(entry: GifEntry, keywords: string[]): boolean {
+  if (keywords.length === 0) return true;
+  const haystack = [entry.id, entry.mood, entry.genre, entry._desc ?? '']
+    .join(' ')
+    .toLowerCase();
+  return keywords.some((kw) => haystack.includes(kw.toLowerCase()));
+}
+
 /**
  * Returns a sequence of count unique GIFs for use as a visual playlist.
  * GIFs are timed sequentially, each playing for secondsEach seconds.
  * If the pool has fewer entries than count, entries are cycled.
+ * Pass keywords to narrow the pool by visual tag (falls back to full pool if no matches).
  */
 export async function getGifSequence(
   mood:        string,
   genre:       string,
   energy:      number,
-  count:       number = 4,
-  secondsEach: number = 4
+  count:       number   = 4,
+  secondsEach: number   = 4,
+  keywords:    string[] = []
 ): Promise<VisualSequenceEntry[]> {
   const base     = import.meta.env.BASE_URL;
   const manifest = await loadManifest();
@@ -85,6 +96,12 @@ export async function getGifSequence(
   if (pool.length === 0) pool = manifest.vibes.filter((v) => v.mood === mood);
   if (pool.length === 0) pool = manifest.vibes;
 
+  // Narrow by keywords — fall back to original pool if nothing matches
+  if (keywords.length > 0) {
+    const filtered = pool.filter((v) => entryMatchesKeywords(v, keywords));
+    if (filtered.length > 0) pool = filtered;
+  }
+
   // Shuffle pool for variety
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
 
@@ -94,7 +111,7 @@ export async function getGifSequence(
       gifUrl:      resolveUrl(entry, base),
       startSec:    i * secondsEach,
       durationSec: secondsEach,
-      tags:        [entry.mood, entry.genre],
+      tags:        [entry.mood, entry.genre, ...(entry._desc?.toLowerCase().split(' ') ?? [])],
     };
   });
 }

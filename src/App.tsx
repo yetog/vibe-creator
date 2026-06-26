@@ -8,7 +8,9 @@ import { TvScreen }           from './components/TvScreen';
 import { PlaybackControls }   from './components/PlaybackControls';
 import { AdvancedPanel }      from './components/AdvancedPanel';
 import { GeneratingOverlay }  from './components/GeneratingOverlay';
+import { HistoryPanel }       from './components/HistoryPanel';
 import { useAudioEngine }     from './hooks/useAudioEngine';
+import { useVibeHistory }     from './hooks/useVibeHistory';
 import { useVideoExport }     from './hooks/useVideoExport';
 import { generateAudio, getDemoAudio } from './services/elevenLabs';
 import { getGifSequence }     from './services/gifLibrary';
@@ -45,6 +47,7 @@ function App() {
   const canvasRef = useRef<VibeCanvasHandle>(null);
   const engine    = useAudioEngine();
   const { startRecording, stopRecording, isRecording } = useVideoExport();
+  const { history, addEntry, clearHistory } = useVibeHistory();
 
   const hasAudio = state !== 'idle';
 
@@ -75,13 +78,17 @@ function App() {
     setGifIndex(0);
 
     try {
-      const prompt = buildAdvancedPrompt({ mood, energy, genre }, advanced);
+      const prompt   = buildAdvancedPrompt({ mood, energy, genre }, advanced);
+      const keywords = advanced.visualKeywords
+        .split(',')
+        .map((k) => k.trim())
+        .filter(Boolean);
 
       const [audioResult, gifSeq] = await Promise.all([
         apiKey
           ? generateAudio(apiKey, { prompt, duration: loopDuration })
           : getDemoAudio(mood),
-        getGifSequence(mood, genre, energy, 6, 4),
+        getGifSequence(mood, genre, energy, 6, 4, keywords),
       ]);
 
       setSequence(gifSeq);
@@ -89,6 +96,8 @@ function App() {
       await engine.loadAudio(audioResult.audioUrl);
       engine.play();
       setState('playing');
+
+      addEntry({ mood, genre, energy, advanced, prompt });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed — please try again.');
       setState('idle');
@@ -108,6 +117,13 @@ function App() {
     if (!engine.isPlaying)        { alert('Start playback before recording'); return; }
     startRecording(canvas, audioContext, engine.connectRecording);
   }, [isRecording, engine, startRecording, stopRecording]);
+
+  const handleReplay = useCallback((entry: import('./hooks/useVibeHistory').VibeHistoryEntry) => {
+    setMood(entry.mood);
+    setGenre(entry.genre);
+    setEnergy(entry.energy);
+    setAdvanced(entry.advanced);
+  }, []);
 
   const handleDownloadAudio = useCallback(() => {
     if (!audioUrl) { alert('Generate a vibe first before downloading'); return; }
@@ -233,6 +249,13 @@ function App() {
 
           {/* ADVANCED panel */}
           <AdvancedPanel value={advanced} onChange={setAdvanced} />
+
+          {/* HISTORY panel */}
+          <HistoryPanel
+            history={history}
+            onReplay={handleReplay}
+            onClear={clearHistory}
+          />
 
           {/* TRANSMIT panel */}
           <div className="app-hud p-5">
