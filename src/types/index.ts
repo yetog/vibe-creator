@@ -48,6 +48,76 @@ export interface AudioAnalysis {
 // Generation state
 export type GenerationState = 'idle' | 'generating' | 'playing' | 'recording' | 'complete';
 
+// =============================================================================
+// ADVANCED MODE — Music Theory
+// =============================================================================
+
+export type MusicKey =
+  | 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F'
+  | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
+
+export type MusicScale =
+  | 'major' | 'minor' | 'dorian' | 'phrygian' | 'lydian'
+  | 'mixolydian' | 'pentatonic-major' | 'pentatonic-minor'
+  | 'blues' | 'harmonic-minor';
+
+export type ChordTemplate =
+  | 'I-V-vi-IV'
+  | 'vi-IV-I-V'
+  | 'ii-V-I'
+  | 'I-vi-IV-V'
+  | 'I-IV-V-I'
+  | 'i-VI-VII-i'
+  | 'I-bVII-IV-I';
+
+export type LoopBars = 16 | 32;
+
+export type UseCase =
+  | 'study' | 'workout' | 'chill' | 'creative' | 'gaming' | 'meditation';
+
+export interface AdvancedSettings {
+  key:            MusicKey;
+  scale:          MusicScale;
+  chordTemplate:  ChordTemplate;
+  loopBars:       LoopBars;
+  addExtensions:  boolean;
+  useCase:        UseCase;
+  visualKeywords: string;
+}
+
+export const DEFAULT_ADVANCED: AdvancedSettings = {
+  key:            'C',
+  scale:          'minor',
+  chordTemplate:  'i-VI-VII-i',
+  loopBars:       16,
+  addExtensions:  false,
+  useCase:        'chill',
+  visualKeywords: '',
+};
+
+export const SCALE_LABELS: Record<MusicScale, string> = {
+  'major':            'Major',
+  'minor':            'Minor',
+  'dorian':           'Dorian',
+  'phrygian':         'Phrygian',
+  'lydian':           'Lydian',
+  'mixolydian':       'Mixolydian',
+  'pentatonic-major': 'Pentatonic Major',
+  'pentatonic-minor': 'Pentatonic Minor',
+  'blues':            'Blues',
+  'harmonic-minor':   'Harmonic Minor',
+};
+
+export const TEMPLATE_LABELS: Record<ChordTemplate, string> = {
+  'I-V-vi-IV':   'Pop / Anthem',
+  'vi-IV-I-V':   'Emotional / Sad',
+  'ii-V-I':      'Jazz / Smooth',
+  'I-vi-IV-V':   '50s / Soul',
+  'I-IV-V-I':    'Classic / Blues',
+  'i-VI-VII-i':  'Dark / Cinematic',
+  'I-bVII-IV-I': 'Rock / Modal',
+};
+
 // Export options
 export interface ExportOptions {
   duration: number;       // seconds

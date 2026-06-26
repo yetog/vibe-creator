@@ -6,18 +6,20 @@ import { GenreSelector }    from './components/GenreSelector';
 import { GifPlayer }           from './components/GifPlayer';
 import { TvScreen }            from './components/TvScreen';
 import { GeneratingOverlay }   from './components/GeneratingOverlay';
+import { AdvancedPanel }       from './components/AdvancedPanel';
 import { PlaybackControls } from './components/PlaybackControls';
 import { useAudioEngine }   from './hooks/useAudioEngine';
 import { useVideoExport }   from './hooks/useVideoExport';
 import { generateAudio, getDemoAudio } from './services/elevenLabs';
 import { getGif }           from './services/gifLibrary';
-import { buildAudioPrompt, buildSimplePrompt } from './utils/promptBuilder';
-import { Mood, Genre, EnergyLevel, GenerationState, GENRE_CONFIG } from './types';
+import { buildAdvancedPrompt, buildSimplePrompt } from './utils/promptBuilder';
+import { Mood, Genre, EnergyLevel, GenerationState, GENRE_CONFIG, AdvancedSettings, DEFAULT_ADVANCED } from './types';
 
 function App() {
-  const [mood,   setMood]   = useState<Mood>('chill');
-  const [energy, setEnergy] = useState<EnergyLevel>(5);
-  const [genre,  setGenre]  = useState<Genre>('lofi');
+  const [mood,     setMood]     = useState<Mood>('chill');
+  const [energy,   setEnergy]   = useState<EnergyLevel>(5);
+  const [genre,    setGenre]    = useState<Genre>('lofi');
+  const [advanced, setAdvanced] = useState<AdvancedSettings>(DEFAULT_ADVANCED);
   const [state,  setState]  = useState<GenerationState>('idle');
   const [error,  setError]  = useState<string | null>(null);
   const [gifUrl, setGifUrl] = useState<string | null>(null);
@@ -41,7 +43,7 @@ function App() {
     try {
       const [audioResult, gifPath] = await Promise.all([
         apiKey
-          ? generateAudio(apiKey, { prompt: buildAudioPrompt({ mood, energy, genre }), duration: 15 })
+          ? generateAudio(apiKey, { prompt: buildAdvancedPrompt({ mood, energy, genre }, advanced), duration: 15 })
           : getDemoAudio(mood),
         getGif(mood, genre, energy),
       ]);
@@ -54,7 +56,7 @@ function App() {
       setError(err instanceof Error ? err.message : 'Generation failed');
       setState('idle');
     }
-  }, [mood, energy, genre, apiKey, engine]);
+  }, [mood, energy, genre, advanced, apiKey, engine]);
 
   const handlePlayPause = useCallback(() => {
     if (engine.isPlaying) engine.pause();
@@ -172,6 +174,9 @@ function App() {
             <GenreSelector value={genre}  onChange={setGenre}  />
             <EnergySlider  value={energy} onChange={setEnergy} />
           </div>
+
+          {/* ADVANCED panel */}
+          <AdvancedPanel value={advanced} onChange={setAdvanced} />
 
           {/* TRANSMIT panel */}
           <div className="app-hud p-5">
