@@ -256,3 +256,69 @@ export interface VibeResult {
   settings:         VibeSettings;
   advancedSettings?: AdvancedSettings;
 }
+
+// =============================================================================
+// AURA MODE — Anime-themed generation
+// =============================================================================
+
+export type AuraScene =
+  | 'training'
+  | 'fight'
+  | 'meditation'
+  | 'awakening'
+  | 'journey'
+  | 'festival';
+
+export interface AuraSettings {
+  scene:      AuraScene;
+  powerLevel: number; // 1–100
+}
+
+export const DEFAULT_AURA: AuraSettings = {
+  scene:      'training',
+  powerLevel: 50,
+};
+
+export const AURA_SCENE_CONFIG: Record<AuraScene, {
+  label:    string;
+  emoji:    string;
+  prompt:   string;
+  bpmRange: [number, number];
+}> = {
+  training: {
+    label:    'Training Arc',
+    emoji:    '💪',
+    prompt:   'intense training montage, building power, determination, taiko drums, rising tension',
+    bpmRange: [130, 155],
+  },
+  fight: {
+    label:    'Battle',
+    emoji:    '⚔️',
+    prompt:   'epic battle theme, clashing energy, dramatic chord hits, heroic brass, urgent strings',
+    bpmRange: [155, 180],
+  },
+  meditation: {
+    label:    'Meditation',
+    emoji:    '🧘',
+    prompt:   'inner peace, spiritual energy, zen atmosphere, calm power beneath the surface, soft bells',
+    bpmRange: [60, 85],
+  },
+  awakening: {
+    label:    'Awakening',
+    emoji:    '✨',
+    prompt:   'power awakening, dramatic reveal, overwhelming energy burst, choir swell, electric surge',
+    bpmRange: [140, 165],
+  },
+  journey: {
+    label:    'Journey',
+    emoji:    '🌅',
+    prompt:   'adventure theme, moving forward, epic landscapes, heroic melody, wanderer spirit',
+    bpmRange: [100, 125],
+  },
+  festival: {
+    label:    'Festival',
+    emoji:    '🎉',
+    prompt:   'anime festival, celebration joy, shamisen and synth fusion, upbeat and bright, dance energy',
+    bpmRange: [120, 145],
+  },
+};

@@ -7,40 +7,48 @@ import { GifPlayer }          from './components/GifPlayer';
 import { TvScreen }           from './components/TvScreen';
 import { PlaybackControls }   from './components/PlaybackControls';
 import { AdvancedPanel }      from './components/AdvancedPanel';
+import { AuraPanel }          from './components/AuraPanel';
 import { GeneratingOverlay }  from './components/GeneratingOverlay';
 import { HistoryPanel }       from './components/HistoryPanel';
 import { useAudioEngine }     from './hooks/useAudioEngine';
 import { useVibeHistory }     from './hooks/useVibeHistory';
 import { useVideoExport }     from './hooks/useVideoExport';
 import { generateAudio, getDemoAudio } from './services/elevenLabs';
-import { getGifSequence }     from './services/gifLibrary';
+import { getGifSequence, getAuraSequence } from './services/gifLibrary';
 import {
-  buildAdvancedPrompt, buildSimplePrompt, getLoopDuration,
+  buildAdvancedPrompt, buildSimplePrompt, buildAuraPrompt, getLoopDuration,
 } from './utils/promptBuilder';
 import {
   Mood, Genre, EnergyLevel, GenerationState, GENRE_CONFIG,
   AdvancedSettings, DEFAULT_ADVANCED, VisualSequenceEntry,
+  AuraSettings, DEFAULT_AURA, AURA_SCENE_CONFIG,
 } from './types';
 
-function App() {
-  // Core selections
-  const [mood,   setMood]   = useState<Mood>('chill');
-  const [energy, setEnergy] = useState<EnergyLevel>(5);
-  const [genre,  setGenre]  = useState<Genre>('lofi');
+type AppMode = 'standard' | 'aura';
 
-  // Advanced settings (used by AdvancedPanel)
+function App() {
+  // App mode toggle
+  const [appMode, setAppMode] = useState<AppMode>('standard');
+
+  // Standard mode state
+  const [mood,     setMood]    = useState<Mood>('chill');
+  const [energy,   setEnergy]  = useState<EnergyLevel>(5);
+  const [genre,    setGenre]   = useState<Genre>('lofi');
   const [advanced, setAdvanced] = useState<AdvancedSettings>(DEFAULT_ADVANCED);
 
+  // Aura mode state
+  const [aura, setAura] = useState<AuraSettings>(DEFAULT_AURA);
+
   // Generation
-  const [state,    setState]   = useState<GenerationState>('idle');
-  const [error,    setError]   = useState<string | null>(null);
+  const [state,    setState]    = useState<GenerationState>('idle');
+  const [error,    setError]    = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
-  // GIF sequence (Sprint 3)
+  // GIF sequence
   const [sequence, setSequence] = useState<VisualSequenceEntry[]>([]);
   const [gifIndex, setGifIndex] = useState(0);
 
-  // API key (kept for display — actual key lives server-side on proxy)
+  // API key
   const [showKey, setShowKey] = useState(false);
   const [apiKey,  setApiKey]  = useState(import.meta.env.VITE_ELEVENLABS_API_KEY || '');
 
@@ -51,15 +59,22 @@ function App() {
 
   const hasAudio = state !== 'idle';
 
-  // Derived BPM from advanced loop settings
-  const [minBpm, maxBpm] = GENRE_CONFIG[genre].bpmRange;
-  const derivedBpm  = Math.round(minBpm + ((energy - 1) / 9) * (maxBpm - minBpm));
-  const loopDuration = getLoopDuration(advanced.loopBars, derivedBpm);
+  // BPM derivation — standard mode uses genre range; aura uses scene range
+  const standardBpmRange = GENRE_CONFIG[genre].bpmRange;
+  const standardBpm = Math.round(
+    standardBpmRange[0] + ((energy - 1) / 9) * (standardBpmRange[1] - standardBpmRange[0])
+  );
+  const auraBpmRange = AURA_SCENE_CONFIG[aura.scene].bpmRange;
+  const auraBpm = Math.round(
+    auraBpmRange[0] + (aura.powerLevel / 100) * (auraBpmRange[1] - auraBpmRange[0])
+  );
 
-  // Current GIF URL from sequence
+  const activeBpm      = appMode === 'aura' ? auraBpm      : standardBpm;
+  const loopDuration   = getLoopDuration(advanced.loopBars, activeBpm);
+
   const currentGifUrl = sequence[gifIndex]?.gifUrl ?? null;
 
-  // GIF rotation timer — advances index every durationSec while playing
+  // GIF rotation timer
   useEffect(() => {
     if (!engine.isPlaying || sequence.length <= 1) return;
     const secEach = sequence[0]?.durationSec ?? 4;
@@ -69,26 +84,39 @@ function App() {
     return () => clearInterval(timer);
   }, [engine.isPlaying, sequence]);
 
-  const handleGenerate = useCallback(async () => {
-    // Synchronous AudioContext unlock — must happen before any async work (iOS fix)
-    engine.unlock();
+  // Reset sequence index when mode switches
+  useEffect(() => {
+    setGifIndex(0);
+    setSequence([]);
+    setState('idle');
+    setError(null);
+  }, [appMode]);
 
+  const handleGenerate = useCallback(async () => {
+    engine.unlock();
     setError(null);
     setState('generating');
     setGifIndex(0);
 
     try {
-      const prompt   = buildAdvancedPrompt({ mood, energy, genre }, advanced);
-      const keywords = advanced.visualKeywords
-        .split(',')
-        .map((k) => k.trim())
-        .filter(Boolean);
+      let prompt: string;
+      let gifSeqPromise: Promise<VisualSequenceEntry[]>;
+
+      if (appMode === 'aura') {
+        prompt = buildAuraPrompt(aura);
+        gifSeqPromise = getAuraSequence(aura.scene, aura.powerLevel, 6, 4);
+      } else {
+        prompt = buildAdvancedPrompt({ mood, energy, genre }, advanced);
+        const keywords = advanced.visualKeywords
+          .split(',').map((k) => k.trim()).filter(Boolean);
+        gifSeqPromise = getGifSequence(mood, genre, energy, 6, 4, keywords);
+      }
 
       const [audioResult, gifSeq] = await Promise.all([
         apiKey
           ? generateAudio(apiKey, { prompt, duration: loopDuration })
-          : getDemoAudio(mood),
-        getGifSequence(mood, genre, energy, 6, 4, keywords),
+          : getDemoAudio(appMode === 'aura' ? 'energetic' : mood),
+        gifSeqPromise,
       ]);
 
       setSequence(gifSeq);
@@ -97,12 +125,14 @@ function App() {
       engine.play();
       setState('playing');
 
-      addEntry({ mood, genre, energy, advanced, prompt });
+      if (appMode === 'standard') {
+        addEntry({ mood, genre, energy, advanced, prompt });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed — please try again.');
       setState('idle');
     }
-  }, [mood, energy, genre, advanced, apiKey, loopDuration, engine]);
+  }, [appMode, mood, energy, genre, advanced, aura, apiKey, loopDuration, engine, addEntry]);
 
   const handlePlayPause = useCallback(() => {
     if (engine.isPlaying) engine.pause();
@@ -123,15 +153,20 @@ function App() {
     setGenre(entry.genre);
     setEnergy(entry.energy);
     setAdvanced(entry.advanced);
+    setAppMode('standard');
   }, []);
 
   const handleDownloadAudio = useCallback(() => {
     if (!audioUrl) { alert('Generate a vibe first before downloading'); return; }
     const link = document.createElement('a');
     link.href     = audioUrl;
-    link.download = `vibe-${mood}-${genre}-${Date.now()}.mp3`;
+    link.download = appMode === 'aura'
+      ? `aura-${aura.scene}-pl${aura.powerLevel}-${Date.now()}.mp3`
+      : `vibe-${mood}-${genre}-${Date.now()}.mp3`;
     link.click();
-  }, [audioUrl, mood, genre]);
+  }, [audioUrl, appMode, aura, mood, genre]);
+
+  const isAura = appMode === 'aura';
 
   return (
     <div
@@ -141,7 +176,7 @@ function App() {
       {/* ── Header ── */}
       <header
         className="px-6 pt-5 pb-4 flex items-end justify-between"
-        style={{ borderBottom: '1px solid var(--border)' }}
+        style={{ borderBottom: `1px solid ${isAura ? 'rgba(255,71,87,0.25)' : 'var(--border)'}` }}
       >
         <div>
           <p className="eyebrow mb-1" style={{ color: 'var(--muted)' }}>
@@ -151,17 +186,42 @@ function App() {
             className="font-cinzel text-3xl font-bold tracking-widest"
             style={{
               color:                'transparent',
-              background:           'linear-gradient(135deg, var(--gold), var(--cyan))',
+              background:           isAura
+                ? 'linear-gradient(135deg, #ff4757, #ff9f43)'
+                : 'linear-gradient(135deg, var(--gold), var(--cyan))',
               WebkitBackgroundClip: 'text',
               backgroundClip:       'text',
+              transition:           'background 0.4s',
             }}
           >
-            VIBE CREATOR
+            {isAura ? 'AURA MODE' : 'VIBE CREATOR'}
           </h1>
         </div>
-        <p className="text-xs" style={{ color: 'var(--muted)' }}>
-          Audio + Visuals · One Click
-        </p>
+
+        {/* Mode toggle */}
+        <div
+          className="flex rounded-lg overflow-hidden text-xs font-medium"
+          style={{ border: '1px solid var(--border)' }}
+        >
+          {(['standard', 'aura'] as AppMode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => setAppMode(m)}
+              className="px-3 py-1.5 transition-all"
+              style={{
+                background: appMode === m
+                  ? m === 'aura' ? 'rgba(255,71,87,0.2)' : 'rgba(201,162,74,0.15)'
+                  : 'transparent',
+                color: appMode === m
+                  ? m === 'aura' ? '#ff4757' : 'var(--gold)'
+                  : 'var(--muted)',
+                borderRight: m === 'standard' ? '1px solid var(--border)' : 'none',
+              }}
+            >
+              {m === 'standard' ? '⬡ Standard' : '⚡ Aura'}
+            </button>
+          ))}
+        </div>
       </header>
 
       {/* ── Main grid ── */}
@@ -169,13 +229,7 @@ function App() {
 
         {/* Left: TV Screen */}
         <div className="flex flex-col gap-4">
-          <TvScreen
-            mood={mood}
-            genre={genre}
-            energy={energy}
-            isPlaying={engine.isPlaying}
-          >
-            {/* Canvas ambient layer */}
+          <TvScreen mood={mood} genre={genre} energy={energy} isPlaying={engine.isPlaying}>
             <div className="absolute inset-0 z-0" style={{ opacity: 0.18 }}>
               <VibeCanvas
                 ref={canvasRef}
@@ -185,15 +239,27 @@ function App() {
                 isPlaying={engine.isPlaying}
               />
             </div>
-            {/* GIF hero layer */}
             <div className="absolute inset-0 z-10">
               <GifPlayer gifUrl={currentGifUrl} isPlaying={engine.isPlaying} />
             </div>
-            {/* Generating overlay */}
             <GeneratingOverlay isGenerating={state === 'generating'} />
+
+            {/* Aura power level badge on screen */}
+            {isAura && state === 'playing' && (
+              <div
+                className="absolute top-3 right-3 z-30 px-2 py-1 rounded font-cinzel text-xs font-bold"
+                style={{
+                  background: 'rgba(0,0,0,0.7)',
+                  border:     '1px solid #ff4757',
+                  color:      '#ff4757',
+                  backdropFilter: 'blur(4px)',
+                }}
+              >
+                PL: {aura.powerLevel}
+              </div>
+            )}
           </TvScreen>
 
-          {/* Error */}
           {error && (
             <div
               className="p-3 rounded-lg text-sm text-center"
@@ -207,18 +273,15 @@ function App() {
             </div>
           )}
 
-          {/* Prompt preview */}
           {state === 'idle' && (
-            <div
-              className="p-3 rounded-lg text-xs text-center app-hud"
-              style={{ color: 'var(--muted)' }}
-            >
+            <div className="p-3 rounded-lg text-xs text-center app-hud" style={{ color: 'var(--muted)' }}>
               <span className="eyebrow mr-2">Preview:</span>
-              {buildSimplePrompt({ mood, energy, genre })}
+              {isAura
+                ? buildAuraPrompt(aura).slice(0, 80) + '…'
+                : buildSimplePrompt({ mood, energy, genre })}
             </div>
           )}
 
-          {/* Sequence indicator */}
           {sequence.length > 1 && state === 'playing' && (
             <div className="flex justify-center gap-1.5">
               {sequence.map((_, i) => (
@@ -227,8 +290,12 @@ function App() {
                   onClick={() => setGifIndex(i)}
                   className="w-1.5 h-1.5 rounded-full transition-all"
                   style={{
-                    background: i === gifIndex ? 'var(--cyan)' : 'var(--border)',
-                    boxShadow:  i === gifIndex ? '0 0 6px var(--cyan)' : 'none',
+                    background: i === gifIndex
+                      ? isAura ? '#ff4757' : 'var(--cyan)'
+                      : 'var(--border)',
+                    boxShadow: i === gifIndex
+                      ? `0 0 6px ${isAura ? '#ff4757' : 'var(--cyan)'}`
+                      : 'none',
                   }}
                 />
               ))}
@@ -239,31 +306,28 @@ function App() {
         {/* Right: Control panels */}
         <div className="flex flex-col gap-4">
 
-          {/* SIGNAL panel */}
-          <div className="app-hud p-5 space-y-5">
-            <p className="eyebrow" style={{ color: 'var(--gold)' }}>⬡ Signal</p>
-            <MoodSelector  value={mood}   onChange={setMood}   />
-            <GenreSelector value={genre}  onChange={setGenre}  />
-            <EnergySlider  value={energy} onChange={setEnergy} />
-          </div>
+          {isAura ? (
+            /* ── AURA panels ── */
+            <AuraPanel value={aura} onChange={setAura} />
+          ) : (
+            /* ── STANDARD panels ── */
+            <>
+              <div className="app-hud p-5 space-y-5">
+                <p className="eyebrow" style={{ color: 'var(--gold)' }}>⬡ Signal</p>
+                <MoodSelector  value={mood}   onChange={setMood}   />
+                <GenreSelector value={genre}  onChange={setGenre}  />
+                <EnergySlider  value={energy} onChange={setEnergy} />
+              </div>
+              <AdvancedPanel value={advanced} onChange={setAdvanced} />
+              <HistoryPanel history={history} onReplay={handleReplay} onClear={clearHistory} />
+            </>
+          )}
 
-          {/* ADVANCED panel */}
-          <AdvancedPanel value={advanced} onChange={setAdvanced} />
-
-          {/* HISTORY panel */}
-          <HistoryPanel
-            history={history}
-            onReplay={handleReplay}
-            onClear={clearHistory}
-          />
-
-          {/* TRANSMIT panel */}
+          {/* TRANSMIT panel — always visible */}
           <div className="app-hud p-5">
             <p className="eyebrow mb-3" style={{ color: 'var(--gold)' }}>⬡ Transmit</p>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm" style={{ color: 'var(--muted)' }}>
-                11Labs API Key
-              </label>
+              <label className="text-sm" style={{ color: 'var(--muted)' }}>11Labs API Key</label>
               <button
                 onClick={() => setShowKey(!showKey)}
                 className="text-xs"
@@ -280,13 +344,27 @@ function App() {
               className="input-hud w-full px-3 py-2 text-sm"
             />
             <p className="mt-2 text-xs" style={{ color: 'var(--muted)' }}>
-              Loop: <span className="font-mono" style={{ color: 'var(--gold)' }}>
-                {advanced.loopBars}-bar ({loopDuration}s)
-              </span>
-              {' · '}Key:{' '}
-              <span className="font-mono" style={{ color: 'var(--gold)' }}>
-                {advanced.key} {advanced.scale}
-              </span>
+              {isAura ? (
+                <>
+                  Scene:{' '}
+                  <span className="font-mono" style={{ color: '#ff4757' }}>
+                    {AURA_SCENE_CONFIG[aura.scene].label}
+                  </span>
+                  {' · '}BPM:{' '}
+                  <span className="font-mono" style={{ color: '#ff4757' }}>{auraBpm}</span>
+                </>
+              ) : (
+                <>
+                  Loop:{' '}
+                  <span className="font-mono" style={{ color: 'var(--gold)' }}>
+                    {advanced.loopBars}-bar ({loopDuration}s)
+                  </span>
+                  {' · '}Key:{' '}
+                  <span className="font-mono" style={{ color: 'var(--gold)' }}>
+                    {advanced.key} {advanced.scale}
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -299,7 +377,7 @@ function App() {
         isGenerating={state === 'generating'}
         isRecording={isRecording}
         hasAudio={hasAudio}
-        tempo={derivedBpm}
+        tempo={activeBpm}
         masterVolume={engine.masterVolume}
         onGenerate={handleGenerate}
         onPlayPause={handlePlayPause}

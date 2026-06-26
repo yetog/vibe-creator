@@ -1,6 +1,6 @@
 import {
-  VibeSettings, AdvancedSettings,
-  MOOD_CONFIG, GENRE_CONFIG,
+  VibeSettings, AdvancedSettings, AuraSettings,
+  MOOD_CONFIG, GENRE_CONFIG, AURA_SCENE_CONFIG,
 } from '../types';
 
 /**
@@ -104,6 +104,33 @@ export function buildAdvancedPrompt(
  */
 export function getLoopDuration(loopBars: 16 | 32, bpm: number): number {
   return Math.round((loopBars * 4) / (bpm / 60));
+}
+
+/**
+ * Build an anime OST prompt for Aura Mode.
+ * Power level (1–100) scales BPM and intensity language.
+ */
+export function buildAuraPrompt(aura: AuraSettings): string {
+  const scene = AURA_SCENE_CONFIG[aura.scene];
+  const { powerLevel } = aura;
+
+  const [minBpm, maxBpm] = scene.bpmRange;
+  const bpm = Math.round(minBpm + (powerLevel / 100) * (maxBpm - minBpm));
+
+  const intensityDesc =
+    powerLevel <= 25 ? 'low power, quiet tension, restrained energy' :
+    powerLevel <= 50 ? 'building power, steadily intensifying, mid-form' :
+    powerLevel <= 75 ? 'high power, unleashing energy, near peak form' :
+                       'maximum power, overwhelming intensity, final form, SSJ energy';
+
+  return [
+    `anime OST, ${scene.prompt}`,
+    `${intensityDesc}`,
+    `${bpm} BPM`,
+    `orchestral with electronic elements, epic strings, taiko drums, synth layers`,
+    `no vocals, cinematic anime soundtrack`,
+    `power level ${powerLevel} out of 100`,
+  ].join(', ');
 }
 
 /**

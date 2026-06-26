@@ -285,6 +285,19 @@
       "file": "fallback.gif",
       "mood": "chill", "genre": "lofi", "energyMin": 1, "energyMax": 10,
       "_desc": "1x1 black pixel safety net"
-    }
+    },
+
+    { "id": "aura-training-1", "file": "https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif",  "mood": "aura", "genre": "training",   "energyMin": 1, "energyMax": 10, "_desc": "Anime power up training GIF — replace with preferred clip" },
+    { "id": "aura-training-2", "file": "https://media.giphy.com/media/4hhZVWpOmSHa0/giphy.gif",       "mood": "aura", "genre": "training",   "energyMin": 5, "energyMax": 10, "_desc": "DBZ training intensity GIF — replace with preferred clip" },
+    { "id": "aura-fight-1",    "file": "https://media.giphy.com/media/3o7TKSx0g7RlHJWKVW/giphy.gif",  "mood": "aura", "genre": "fight",      "energyMin": 1, "energyMax": 10, "_desc": "Anime battle aura energy GIF — replace with preferred clip" },
+    { "id": "aura-fight-2",    "file": "https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif",   "mood": "aura", "genre": "fight",      "energyMin": 6, "energyMax": 10, "_desc": "Anime sword clash GIF — replace with preferred clip" },
+    { "id": "aura-meditation-1","file": "https://media.giphy.com/media/3oKIPnbKgN3bXeVpvy/giphy.gif", "mood": "aura", "genre": "meditation", "energyMin": 1, "energyMax": 10, "_desc": "Anime calm meditation GIF — replace with preferred clip" },
+    { "id": "aura-meditation-2","file": "https://media.giphy.com/media/5NPbSBhDlMBEY/giphy.gif",      "mood": "aura", "genre": "meditation", "energyMin": 1, "energyMax": 6,  "_desc": "Zen anime peaceful scene GIF — replace with preferred clip" },
+    { "id": "aura-awakening-1","file": "https://media.giphy.com/media/l4FGCKpCMb6FNmHs4/giphy.gif",  "mood": "aura", "genre": "awakening",  "energyMin": 1, "energyMax": 10, "_desc": "Power level awakening explosion GIF — replace with preferred clip" },
+    { "id": "aura-awakening-2","file": "https://media.giphy.com/media/jTd7T7NMJKQIE/giphy.gif",      "mood": "aura", "genre": "awakening",  "energyMin": 7, "energyMax": 10, "_desc": "SSJ transformation GIF — replace with preferred clip" },
+    { "id": "aura-journey-1",  "file": "https://media.giphy.com/media/26xBxnXCMrPoHMHte/giphy.gif",  "mood": "aura", "genre": "journey",    "energyMin": 1, "energyMax": 10, "_desc": "Anime journey landscape GIF — replace with preferred clip" },
+    { "id": "aura-journey-2",  "file": "https://media.giphy.com/media/3oKIPtjEkIBJqXyAHK/giphy.gif", "mood": "aura", "genre": "journey",    "energyMin": 4, "energyMax": 10, "_desc": "Anime night adventure GIF — replace with preferred clip" },
+    { "id": "aura-festival-1", "file": "https://media.giphy.com/media/xTiTnj5OOiqAFQMUFi/giphy.gif", "mood": "aura", "genre": "festival",   "energyMin": 1, "energyMax": 10, "_desc": "Anime sakura festival GIF — replace with preferred clip" },
+    { "id": "aura-festival-2", "file": "https://media.giphy.com/media/26BRrSPMxUBGFSyT6/giphy.gif",  "mood": "aura", "genre": "festival",   "energyMin": 5, "energyMax": 10, "_desc": "Anime celebration night GIF — replace with preferred clip" }
   ]
 }

@@ -64,6 +64,40 @@ function resolveUrl(entry: GifEntry, base: string): string {
   return `${base}vibes/${entry.file}`;
 }
 
+/**
+ * Returns a GIF sequence filtered to Aura Mode entries (mood === "aura").
+ * Tries to match scene exactly, falls back to any aura entry.
+ */
+export async function getAuraSequence(
+  scene:       string,
+  powerLevel:  number,
+  count:       number = 6,
+  secondsEach: number = 4
+): Promise<VisualSequenceEntry[]> {
+  const base     = import.meta.env.BASE_URL;
+  const manifest = await loadManifest();
+
+  const energy = Math.round(1 + (powerLevel / 100) * 9) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+  let pool = manifest.vibes.filter(
+    (v) => v.mood === 'aura' && v.genre === scene && energy >= v.energyMin && energy <= v.energyMax
+  );
+  if (pool.length === 0) pool = manifest.vibes.filter((v) => v.mood === 'aura' && v.genre === scene);
+  if (pool.length === 0) pool = manifest.vibes.filter((v) => v.mood === 'aura');
+
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+
+  return Array.from({ length: count }, (_, i) => {
+    const entry = shuffled[i % Math.max(shuffled.length, 1)];
+    return {
+      gifUrl:      resolveUrl(entry, base),
+      startSec:    i * secondsEach,
+      durationSec: secondsEach,
+      tags:        ['aura', scene, entry._desc?.toLowerCase() ?? ''],
+    };
+  });
+}
+
 function entryMatchesKeywords(entry: GifEntry, keywords: string[]): boolean {
   if (keywords.length === 0) return true;
   const haystack = [entry.id, entry.mood, entry.genre, entry._desc ?? '']
