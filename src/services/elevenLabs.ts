@@ -1,11 +1,11 @@
 /**
- * 11Labs Audio Generation Service
+ * ElevenLabs Audio Generation Service
  *
- * Uses backend proxy to keep API key secure (never exposed to frontend)
+ * Calls the ElevenLabs Sound Generation API directly.
+ * API key is read from VITE_ELEVENLABS_API_KEY and sent as xi-api-key header.
  */
 
-// Backend proxy URL - API key is stored server-side
-const PROXY_URL = 'https://zaylegend.com/api/elevenlabs';
+const ELEVENLABS_URL = 'https://api.elevenlabs.io/v1/sound-generation';
 
 interface GenerateOptions {
   prompt: string;
@@ -18,8 +18,8 @@ interface GenerateResult {
 }
 
 const STATUS_MESSAGES: Record<number, string> = {
-  401: 'Invalid API key — check server configuration.',
-  402: 'ElevenLabs credits exhausted — top up the account at elevenlabs.io.',
+  401: 'Invalid API key — check your VITE_ELEVENLABS_API_KEY.',
+  402: 'ElevenLabs credits exhausted — top up at elevenlabs.io.',
   422: 'Prompt too long or invalid — try a shorter description.',
   429: 'Rate limited — wait a moment and try again.',
   503: 'Generation service unavailable — try again shortly.',
@@ -46,49 +46,42 @@ async function fetchWithRetry(
 }
 
 /**
- * Generate audio using backend proxy (API key stays server-side).
+ * Generate audio via ElevenLabs Sound Generation API.
+ * Sends xi-api-key header directly — no proxy.
  * Retries up to 3 times on network/5xx errors with exponential backoff.
  */
 export async function generateAudio(
-  _apiKey: string,  // Ignored - key is on server
+  apiKey: string,
   options: GenerateOptions
 ): Promise<GenerateResult> {
   const { prompt, duration = 15 } = options;
 
-  try {
-    const response = await fetchWithRetry(`${PROXY_URL}/generate-sound`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: prompt,
-        duration_seconds: duration,
-        prompt_influence: 0.3,
-      }),
-    });
+  const response = await fetchWithRetry(ELEVENLABS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'xi-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      text: prompt,
+      duration_seconds: duration,
+      prompt_influence: 0.3,
+    }),
+  });
 
-    if (!response.ok) {
-      const friendly = STATUS_MESSAGES[response.status];
-      if (friendly) throw new Error(friendly);
-      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      throw new Error(error.detail || `API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Convert hex-encoded audio back to blob
-    const bytes = new Uint8Array(
-      data.audio.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16))
-    );
-    const audioBlob = new Blob([bytes], { type: data.content_type || 'audio/mpeg' });
-    const audioUrl = URL.createObjectURL(audioBlob);
-
-    return { audioUrl, audioBlob };
-  } catch (error) {
-    console.error('Audio generation failed:', error);
-    throw error;
+  if (!response.ok) {
+    const friendly = STATUS_MESSAGES[response.status];
+    if (friendly) throw new Error(friendly);
+    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new Error(error.detail || `API error: ${response.status}`);
   }
+
+  // ElevenLabs returns raw audio/mpeg binary
+  const arrayBuffer = await response.arrayBuffer();
+  const audioBlob   = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+  const audioUrl    = URL.createObjectURL(audioBlob);
+
+  return { audioUrl, audioBlob };
 }
 
 /**
@@ -119,16 +112,10 @@ export async function getDemoAudio(mood: string): Promise<GenerateResult> {
 }
 
 /**
- * Check if API key is configured on server
+ * Quick check that an API key is non-empty (no network call needed).
  */
-export async function checkServerStatus(): Promise<boolean> {
-  try {
-    const response = await fetch(`${PROXY_URL}/status`);
-    const data = await response.json();
-    return data.configured === true;
-  } catch {
-    return false;
-  }
+export function checkServerStatus(): boolean {
+  return !!(import.meta.env.VITE_ELEVENLABS_API_KEY);
 }
 
 /**
