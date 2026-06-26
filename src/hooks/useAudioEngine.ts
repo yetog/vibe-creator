@@ -8,6 +8,7 @@ export interface UseAudioEngineReturn {
   masterVolume:     number;
   analysis:         AudioAnalysis | null;
   loadAudio:        (url: string) => Promise<void>;
+  unlock:           () => void;
   play:             () => void;
   pause:            () => void;
   stop:             () => void;
@@ -121,6 +122,13 @@ export function useAudioEngine(): UseAudioEngineReturn {
     }
   }, []);
 
+  // Must be called synchronously inside a user gesture (onClick) before any
+  // async work — required for iOS Safari AudioContext autoplay policy.
+  const unlock = useCallback(() => {
+    const ctx = initContext();
+    if (ctx.state === 'suspended') ctx.resume();
+  }, [initContext]);
+
   const getAudioContext  = useCallback(() => audioContextRef.current, []);
   const connectRecording = useCallback((dest: MediaStreamAudioDestinationNode) => {
     analyserRef.current?.connect(dest);
@@ -184,7 +192,7 @@ export function useAudioEngine(): UseAudioEngineReturn {
 
   return {
     isPlaying, isLooping, tempo, masterVolume, analysis,
-    loadAudio, play, pause, stop,
+    loadAudio, unlock, play, pause, stop,
     toggleLoop, setTempo, setMasterVolume,
     getAudioContext, connectRecording,
   };

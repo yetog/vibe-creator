@@ -34,6 +34,7 @@ function App() {
   const derivedBpm = Math.round(minBpm + ((energy - 1) / 9) * (maxBpm - minBpm));
 
   const handleGenerate = useCallback(async () => {
+    engine.unlock(); // iOS Safari: must call synchronously before any async work
     setError(null);
     setState('generating');
     try {

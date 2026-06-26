@@ -17,8 +17,37 @@ interface GenerateResult {
   audioBlob: Blob;
 }
 
+const STATUS_MESSAGES: Record<number, string> = {
+  401: 'Invalid API key — check server configuration.',
+  402: 'ElevenLabs credits exhausted — top up the account at elevenlabs.io.',
+  422: 'Prompt too long or invalid — try a shorter description.',
+  429: 'Rate limited — wait a moment and try again.',
+  503: 'Generation service unavailable — try again shortly.',
+};
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  maxAttempts = 3
+): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, init);
+      // Don't retry client errors (4xx) — only network failures and 5xx
+      if (res.ok || (res.status >= 400 && res.status < 500)) return res;
+      lastError = new Error(`Server error: ${res.status}`);
+    } catch (err) {
+      lastError = err;
+    }
+    if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 1000 * attempt));
+  }
+  throw lastError;
+}
+
 /**
- * Generate audio using backend proxy (API key stays server-side)
+ * Generate audio using backend proxy (API key stays server-side).
+ * Retries up to 3 times on network/5xx errors with exponential backoff.
  */
 export async function generateAudio(
   _apiKey: string,  // Ignored - key is on server
@@ -27,7 +56,7 @@ export async function generateAudio(
   const { prompt, duration = 15 } = options;
 
   try {
-    const response = await fetch(`${PROXY_URL}/generate-sound`, {
+    const response = await fetchWithRetry(`${PROXY_URL}/generate-sound`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -40,6 +69,8 @@ export async function generateAudio(
     });
 
     if (!response.ok) {
+      const friendly = STATUS_MESSAGES[response.status];
+      if (friendly) throw new Error(friendly);
       const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
       throw new Error(error.detail || `API error: ${response.status}`);
     }
