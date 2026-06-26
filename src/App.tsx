@@ -3,8 +3,9 @@ import { VibeCanvas, VibeCanvasHandle } from './components/VibeCanvas';
 import { MoodSelector }     from './components/MoodSelector';
 import { EnergySlider }     from './components/EnergySlider';
 import { GenreSelector }    from './components/GenreSelector';
-import { GifPlayer }        from './components/GifPlayer';
-import { TvScreen }         from './components/TvScreen';
+import { GifPlayer }           from './components/GifPlayer';
+import { TvScreen }            from './components/TvScreen';
+import { GeneratingOverlay }   from './components/GeneratingOverlay';
 import { PlaybackControls } from './components/PlaybackControls';
 import { useAudioEngine }   from './hooks/useAudioEngine';
 import { useVideoExport }   from './hooks/useVideoExport';
@@ -133,6 +134,8 @@ function App() {
             <div className="absolute inset-0 z-10">
               <GifPlayer gifUrl={gifUrl} isPlaying={engine.isPlaying} />
             </div>
+            {/* Generating overlay — z-20, sits above canvas + GIF */}
+            <GeneratingOverlay isGenerating={state === 'generating'} />
           </TvScreen>
 
           {error && (
