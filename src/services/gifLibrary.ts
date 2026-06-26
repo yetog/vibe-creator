@@ -1,3 +1,5 @@
+import { VisualSequenceEntry } from '../types';
+
 interface GifEntry {
   id:        string;
   file:      string;
@@ -54,4 +56,45 @@ export async function getGif(
   // External URLs (Giphy, Tenor, etc.) are used as-is; local files get the base prefix.
   if (pick.file.startsWith('http')) return pick.file;
   return `${base}vibes/${pick.file}`;
+}
+
+function resolveUrl(entry: GifEntry, base: string): string {
+  if (entry.file.startsWith('http')) return entry.file;
+  return `${base}vibes/${entry.file}`;
+}
+
+/**
+ * Returns a sequence of count unique GIFs for use as a visual playlist.
+ * GIFs are timed sequentially, each playing for secondsEach seconds.
+ * If the pool has fewer entries than count, entries are cycled.
+ */
+export async function getGifSequence(
+  mood:        string,
+  genre:       string,
+  energy:      number,
+  count:       number = 4,
+  secondsEach: number = 4
+): Promise<VisualSequenceEntry[]> {
+  const base     = import.meta.env.BASE_URL;
+  const manifest = await loadManifest();
+
+  let pool = manifest.vibes.filter(
+    (v) => v.mood === mood && v.genre === genre && energy >= v.energyMin && energy <= v.energyMax
+  );
+  if (pool.length === 0) pool = manifest.vibes.filter((v) => v.mood === mood && v.genre === genre);
+  if (pool.length === 0) pool = manifest.vibes.filter((v) => v.mood === mood);
+  if (pool.length === 0) pool = manifest.vibes;
+
+  // Shuffle pool for variety
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+
+  return Array.from({ length: count }, (_, i) => {
+    const entry = shuffled[i % shuffled.length];
+    return {
+      gifUrl:      resolveUrl(entry, base),
+      startSec:    i * secondsEach,
+      durationSec: secondsEach,
+      tags:        [entry.mood, entry.genre],
+    };
+  });
 }
