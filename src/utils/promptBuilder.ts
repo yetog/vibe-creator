@@ -7,21 +7,27 @@ export function buildAudioPrompt(settings: VibeSettings): string {
   const moodConfig = MOOD_CONFIG[settings.mood];
   const genreConfig = GENRE_CONFIG[settings.genre];
 
-  // Calculate BPM based on energy within genre range
   const [minBpm, maxBpm] = genreConfig.bpmRange;
   const bpm = Math.round(minBpm + ((settings.energy - 1) / 9) * (maxBpm - minBpm));
 
-  // Build the prompt
-  const parts = [
-    `Create a ${settings.energy > 5 ? 'high-energy' : 'mellow'} ${settings.genre} track`,
-    `at ${bpm} BPM`,
-    `with a ${moodConfig.prompt} vibe`,
-    `featuring ${genreConfig.instruments.slice(0, 3).join(', ')}`,
-    `Duration: 15-20 seconds`,
-    `Style: ${genreConfig.prompt}`,
+  // 5-level energy descriptor (pairs: 1-2, 3-4, 5-6, 7-8, 9-10)
+  const energyTiers = [
+    'very gentle and subdued',
+    'soft and laid-back',
+    'moderate and steady',
+    'energetic and driving',
+    'intense and powerful',
   ];
+  const energyDesc = energyTiers[Math.min(Math.floor((settings.energy - 1) / 2), 4)];
 
-  return parts.join('. ');
+  return [
+    `${genreConfig.prompt},`,
+    `${moodConfig.prompt} feeling,`,
+    `${energyDesc} energy,`,
+    `${bpm} BPM,`,
+    `featuring ${genreConfig.instruments.join(', ')},`,
+    `15 seconds`,
+  ].join(' ');
 }
 
 /**
