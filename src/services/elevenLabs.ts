@@ -108,11 +108,12 @@ export async function getDemoAudio(mood: string): Promise<GenerateResult> {
 
   try {
     const response = await fetch(sampleUrl);
+    if (!response.ok) throw new Error('Sample not found');
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     return { audioUrl, audioBlob };
   } catch {
-    // Generate a simple tone as fallback
+    // Samples missing or unavailable — fall back to generated tone
     return generateTone(440, 15);
   }
 }
