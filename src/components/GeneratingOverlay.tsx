@@ -16,7 +16,7 @@ export function GeneratingOverlay({ isGenerating }: GeneratingOverlayProps) {
   const [dotCount, setDotCount]   = useState(0);
 
   useEffect(() => {
-    if (!isGenerating) { setStepIndex(0); return; }
+    if (!isGenerating) { setStepIndex(0); setDotCount(0); return; }
     const stepTimer = setInterval(() => {
       setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
     }, 2200);

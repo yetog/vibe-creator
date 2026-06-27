@@ -199,9 +199,3 @@ function writeString(view: DataView, offset: number, string: string) {
   }
 }
 
-/**
- * Legacy: Validate API key (deprecated - key is now server-side)
- */
-export async function validateApiKey(_apiKey: string): Promise<boolean> {
-  return checkServerStatus();
-}

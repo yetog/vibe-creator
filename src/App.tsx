@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { VibeCanvas, VibeCanvasHandle } from './components/VibeCanvas';
 import { MoodSelector }     from './components/MoodSelector';
 import { EnergySlider }     from './components/EnergySlider';
@@ -34,7 +34,12 @@ function App() {
   const { startRecording, stopRecording, isRecording } = useVideoExport();
   const { history, addEntry, clearHistory } = useVibeHistory();
 
-  const hasAudio = state !== 'idle';
+  const hasAudio = audioUrl !== null;
+
+  // Revoke stale blob URLs to prevent memory leaks across generations
+  useEffect(() => {
+    return () => { if (audioUrl) URL.revokeObjectURL(audioUrl); };
+  }, [audioUrl]);
 
   const [minBpm, maxBpm] = GENRE_CONFIG[genre].bpmRange;
   const derivedBpm = Math.round(minBpm + ((energy - 1) / 9) * (maxBpm - minBpm));
@@ -44,9 +49,10 @@ function App() {
     setError(null);
     setState('generating');
     try {
+      const prompt = buildAdvancedPrompt({ mood, energy, genre }, advanced);
       const [audioResult, gifPath] = await Promise.all([
         apiKey
-          ? generateAudio(apiKey, { prompt: buildAdvancedPrompt({ mood, energy, genre }, advanced), duration: 15 })
+          ? generateAudio(apiKey, { prompt, duration: 15 })
           : getDemoAudio(mood),
         getGif(mood, genre, energy),
       ]);
@@ -55,7 +61,7 @@ function App() {
       await engine.loadAudio(audioResult.audioUrl);
       engine.play();
       setState('playing');
-      addEntry({ mood, energy, genre, advanced, prompt: buildAdvancedPrompt({ mood, energy, genre }, advanced) });
+      addEntry({ mood, energy, genre, advanced, prompt });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed');
       setState('idle');

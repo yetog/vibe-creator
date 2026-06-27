@@ -1,36 +1,6 @@
 import { VibeSettings, AdvancedSettings, MOOD_CONFIG, GENRE_CONFIG } from '../types';
 
 /**
- * Build a prompt for 11Labs audio generation based on user selections
- */
-export function buildAudioPrompt(settings: VibeSettings): string {
-  const moodConfig = MOOD_CONFIG[settings.mood];
-  const genreConfig = GENRE_CONFIG[settings.genre];
-
-  const [minBpm, maxBpm] = genreConfig.bpmRange;
-  const bpm = Math.round(minBpm + ((settings.energy - 1) / 9) * (maxBpm - minBpm));
-
-  // 5-level energy descriptor (pairs: 1-2, 3-4, 5-6, 7-8, 9-10)
-  const energyTiers = [
-    'very gentle and subdued',
-    'soft and laid-back',
-    'moderate and steady',
-    'energetic and driving',
-    'intense and powerful',
-  ];
-  const energyDesc = energyTiers[Math.min(Math.floor((settings.energy - 1) / 2), 4)];
-
-  return [
-    `${genreConfig.prompt},`,
-    `${moodConfig.prompt} feeling,`,
-    `${energyDesc} energy,`,
-    `${bpm} BPM,`,
-    `featuring ${genreConfig.instruments.join(', ')},`,
-    `15 seconds`,
-  ].join(' ');
-}
-
-/**
  * Build a richer prompt including music-theory parameters from AdvancedPanel.
  * Subsumes buildAudioPrompt when advanced settings are active.
  */
@@ -52,7 +22,7 @@ export function buildAdvancedPrompt(
     `key of ${key} ${scale}`,
     `${chordTemplate} chord progression${extensions}`,
     `${instruments}, no vocals`,
-    `${loopBars}-bar loop (${durationSec} seconds)`,
+    `${loopBars}-bar loop (${Math.min(durationSec, 22)} seconds)`,
     `use case: ${useCase}`,
     `emotional feel: ${MOOD_CONFIG[mood].prompt}`,
     `style: ${GENRE_CONFIG[genre].prompt}`,

@@ -125,6 +125,8 @@ export function AdvancedPanel({ value, onChange }: AdvancedPanelProps) {
             </div>
             <button
               onClick={() => set('addExtensions', !value.addExtensions)}
+              aria-pressed={value.addExtensions}
+              aria-label="Toggle 7th/9th chord extensions"
               className="w-10 h-5 rounded-full transition-all relative"
               style={{ background: value.addExtensions ? 'var(--gold)' : 'var(--border)' }}
             >

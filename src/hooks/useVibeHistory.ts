@@ -42,7 +42,7 @@ export function useVibeHistory() {
     setHistory((prev) => {
       const next: VibeHistoryEntry = {
         ...entry,
-        id:        `${entry.mood}-${entry.genre}-${Date.now()}`,
+        id:        crypto.randomUUID(),
         timestamp: Date.now(),
       };
       return [next, ...prev].slice(0, MAX_ENTRIES);
