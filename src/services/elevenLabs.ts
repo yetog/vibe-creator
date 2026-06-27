@@ -1,11 +1,10 @@
 /**
  * ElevenLabs Audio Generation Service
  *
- * Calls the ElevenLabs Sound Generation API directly.
- * API key is read from VITE_ELEVENLABS_API_KEY and sent as xi-api-key header.
+ * Routes through the zaylegend.com backend proxy — API key never leaves the server.
  */
 
-const ELEVENLABS_URL = 'https://api.elevenlabs.io/v1/sound-generation';
+const PROXY_URL = 'https://zaylegend.com/api/elevenlabs';
 
 interface GenerateOptions {
   prompt: string;
@@ -18,7 +17,7 @@ interface GenerateResult {
 }
 
 const STATUS_MESSAGES: Record<number, string> = {
-  401: 'Invalid API key — check your VITE_ELEVENLABS_API_KEY.',
+  401: 'ElevenLabs credentials not configured on server.',
   402: 'ElevenLabs credits exhausted — top up at elevenlabs.io.',
   422: 'Prompt too long or invalid — try a shorter description.',
   429: 'Rate limited — wait a moment and try again.',
@@ -46,22 +45,20 @@ async function fetchWithRetry(
 }
 
 /**
- * Generate audio via ElevenLabs Sound Generation API.
- * Sends xi-api-key header directly — no proxy.
+ * Generate audio via the zaylegend.com backend proxy.
+ * The proxy holds the ElevenLabs API key server-side and returns
+ * { audio: "<hex>", content_type: "audio/mpeg" }.
  * Retries up to 3 times on network/5xx errors with exponential backoff.
  */
 export async function generateAudio(
-  apiKey: string,
+  _apiKey: string,  // unused — key lives on the server
   options: GenerateOptions
 ): Promise<GenerateResult> {
   const { prompt, duration = 15 } = options;
 
-  const response = await fetchWithRetry(ELEVENLABS_URL, {
+  const response = await fetchWithRetry(`${PROXY_URL}/generate-sound`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'xi-api-key': apiKey,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text: prompt,
       duration_seconds: duration,
@@ -76,10 +73,16 @@ export async function generateAudio(
     throw new Error(error.detail || `API error: ${response.status}`);
   }
 
-  // ElevenLabs returns raw audio/mpeg binary
-  const arrayBuffer = await response.arrayBuffer();
-  const audioBlob   = new Blob([arrayBuffer], { type: 'audio/mpeg' });
-  const audioUrl    = URL.createObjectURL(audioBlob);
+  const data = await response.json();
+
+  // Proxy returns hex-encoded audio — decode to bytes
+  const hex = data.audio as string;
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  const audioBlob = new Blob([bytes], { type: data.content_type || 'audio/mpeg' });
+  const audioUrl  = URL.createObjectURL(audioBlob);
 
   return { audioUrl, audioBlob };
 }
@@ -112,10 +115,16 @@ export async function getDemoAudio(mood: string): Promise<GenerateResult> {
 }
 
 /**
- * Quick check that an API key is non-empty (no network call needed).
+ * Check whether the backend proxy has an ElevenLabs key configured.
  */
-export function checkServerStatus(): boolean {
-  return !!(import.meta.env.VITE_ELEVENLABS_API_KEY);
+export async function checkServerStatus(): Promise<boolean> {
+  try {
+    const response = await fetch(`${PROXY_URL}/status`);
+    const data = await response.json();
+    return data.configured === true;
+  } catch {
+    return false;
+  }
 }
 
 /**
